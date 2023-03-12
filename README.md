@@ -2,6 +2,7 @@
  An open source power distribution switch for 12V DC applications
 - [BigPowerBox](#bigpowerbox)
   - [Introduction](#introduction)
+  - [USB ports or rather, the lack of](#usb-ports-or-rather-the-lack-of)
   - [File contents](#file-contents)
   - [Requirements](#requirements)
     - [Operate](#operate)
@@ -37,6 +38,9 @@ This repo contains all the necessary files to build and control a power box with
 - input Current and voltage measurement
 - output current measurement on all ports
 - TODO: dew heater control based on temp/humid sensors 
+
+## USB ports or rather, the lack of
+All commercial powerboxes have an integrated USB hub, so why does my box not have one? TBH I originally wanted to also have an awesome USB3.1 Gen 2 hub with plenty of ports, but have you ever tried to design one? One of the goals was to spend less building this than buying a commercial box and from my research - and the laughs of my friends who are in hardware - I deduced that I would have spent much more just iterating to get the high speed USB hub working. It's a completely different ball game to build a reliable, superspeed USB hub, especially when astrophotographers looove long usb cables. So I decided to leave that project for another day and just buy an industrial hub.
 
 ## File contents
 Please read the Readme in each folder for more details

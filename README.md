@@ -61,7 +61,7 @@ To Operate this device you will need the following
   - Ascom platform
   - FTDI driver ( my arduino implementation uses a FT232 chip)
   - Astro sequencer ( I tested on N.I.N.A but this should also work on SGP and others )
-  - download the ascom installer from the releases tab and run it, the Switch will be available in your Ascom chooser under "ShortCircuit.BigPowerSwitch"
+  - download the ascom installer from the [releases](releases) tab and run it, the Switch will be available in your Ascom chooser under "ShortCircuit.BigPowerSwitch"
 - Linux (TODO)
   - Indi platform
   - Kstars / Ekos

@@ -24,7 +24,7 @@ So in short *Read* operations are asynchronous and *Write* oprations are synchro
 The sevrer maintains a list of clients and shuts down once all clients have disconnected.
 
 # Installing the driver 
-Downlad the installer from the realeases tab and run it, it should register the server and make the driver available in the ASCOM choser. 
+Downlad the installer from the [realeases](https://github.com/MichelMoriniaux/BigPowerBox/releases) tab and run it, it should register the server and make the driver available in the ASCOM choser. 
 
 # Building the driver
 Open the solution in Visual Studio 2022 and press `CTRL+B` the driver should build.  

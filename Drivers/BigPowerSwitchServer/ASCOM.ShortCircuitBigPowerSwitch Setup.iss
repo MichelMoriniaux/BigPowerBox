@@ -36,7 +36,7 @@ Name: "{cf}\ASCOM\Uninstall\Switch\ASCOM.ShortCircuitBigPowerSwitch"
 [Files]
 Source: "C:\Users\Mitch\source\repos\BigPowerSwitchServer\bin\Release\ASCOM.ShortCircuitBigPowerSwitch.exe"; DestDir: "{app}" ;AfterInstall: RegASCOM()
 ; Require a read-me HTML to appear after installation, maybe driver's Help doc
-Source: "C:\Users\Mitch\source\repos\BigPowerSwitchServer\readme.txt"; DestDir: "{app}"; Flags: isreadme
+Source: "C:\Users\Mitch\source\repos\BigPowerSwitchServer\README.md"; DestDir: "{app}"; Flags: isreadme
 ; TODO: Add other files needed by your driver here (add subfolders above)
 
 ;Only if COM Local Server

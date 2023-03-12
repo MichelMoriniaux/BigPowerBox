@@ -7,7 +7,7 @@
     - [Operate](#operate)
     - [Build](#build)
   - [PCB picture](#pcb-picture)
-  - [Product renderings ( 3d printer still printing at time of this commit )](#product-renderings--3d-printer-still-printing-at-time-of-this-commit-)
+  - [Enclosure](#enclosure)
   - [N.I.N.A Screencap](#nina-screencap)
 - [Acknowledgements](#acknowledgements)
 
@@ -16,8 +16,8 @@ Astrophotography is great hobby but some of its drawbacks are that you often nee
 
 But why would you build vs buy??? 
 
-For one, specialized power boxes are usually expensive (400 to 1000 USD range) and may not provide the features you actually need. Secondly - and most importantly in my case - all the commercial offerings absolutely insist on providing the output ports on 2.5mm barrel connectors. These connectors' fit are notoriously unreliable and in the case of astronomy with a moving mount pulling and tugging on cables is a recipe for frustration and lost imaging time.
-The *BigPowerBox* aka *PowerBox Exxxtreme* is built with versatility, reliability and scale in mind. The output connectors are all GX-12 aviation plugs, most high quality mounts on the market use these plugs as they *screw-on* and provide a very secure connection. A few years back, frustrated by disconnects during slews I replaced all the connectors ( including serial and USB ) with Gx-12s in my EQ-6, this was the origin of my love for these connectors.
+For one, specialized power boxes are usually expensive (400 to 1000 USD range) and may not provide the features you actually need. Secondly - and most importantly in my case - all the commercial offerings absolutely insist on providing the output ports on 2.5mm barrel connectors. These connectors' fit are notoriously unreliable and in the case of astronomy with a moving mount pulling and tugging on cables is a recipe for frustration and lost imaging time.  
+The *BigPowerBox* aka *PowerBox Exxxtreme* is built with versatility, reliability and scale in mind. The output connectors are all GX-12 aviation plugs, most high quality mounts on the market use these plugs as they *screw-on* and provide a very secure connection. A few years back, frustrated by disconnects during slews I replaced all the connectors ( including serial and USB ) with Gx-12s in my EQ-6, this was the origin of my love for these connectors.  
 I also found that the commercial powerboxes were also limited in ports, so I went overboard and crammed as much as I could in a small footprint. The box provides natively 14 12V output ports, you could customize these with small buck converters to 5V or whatever voltage mix you would want.
 
 Building this box was also an exercise in learning a new hobby: electronics design. I'm a CS engineer, not EE. I have built a lot of Arduino based tools ( flip flat panel, temperature regulators for my cheap wine fridges, my own 3d printer and a slew of home automation devices ) but never a device that needed me to read datasheets for. So even though I tested the device I guarantee nothing and do not blame me if it burns down your stuff. I release this as Open Source Hardware with a CERN license so that real HW designers can improve on my base design and point out my noob mistakes. I had my boards fabricated by JLCPCB for about 100USD a piece.
@@ -81,7 +81,7 @@ To build the device and customize it you will need:
 ## PCB picture
 ![PCB Picture](Resources/pcb.jpg)
 
-## Product renderings ( 3d printer still printing at time of this commit )
+## Enclosure
 ![Finished Product](Resources/input.png)
 ![Finished Product](Resources/output.png)
 ![Finished Product](Resources/top.png)

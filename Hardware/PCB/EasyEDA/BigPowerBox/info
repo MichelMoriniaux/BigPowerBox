@@ -4,7 +4,7 @@
   "name": "BigPowerBox",
   "content": "",
   "created_at": "2023-02-16 10:15:21",
-  "updated_at": "2023-03-11 15:56:38",
+  "updated_at": "2023-03-20 16:48:30",
   "stick": "",
   "documents": [
     {
@@ -865,7 +865,8 @@
         "c2a8c52f6bda437986231e6186a19bb5": 1,
         "a8dd292fc7454e3fa5021143b46d07ec": 1,
         "029b1071b94d4f798c63168ff8141d72": 1,
-        "154b66255b01a09bf1c88bb1ea89be78": 1
+        "154b66255b01a09bf1c88bb1ea89be78": 1,
+        "375efc1681694807b2f384bc34b2c26f": 1
       },
       "BOM": [
         [
@@ -978,6 +979,21 @@
             "BOM_JLCPCB Part Class": "Extended Part",
             "puuid": "7a5c41e42d7442b78e2a9154cf5eb4a1",
             "uuid": "25d621aa01c146e58237831e859d1b6b"
+          }
+        ],
+        [
+          "SS1P3L-M3/84A",
+          1,
+          "DO-220AA_L3.4-W2.0-LS3.9-RD",
+          "D3",
+          {
+            "BOM_Supplier": "LCSC",
+            "BOM_Supplier Part": "C2875475",
+            "BOM_Manufacturer": "VISHAY(威世)",
+            "BOM_Manufacturer Part": "SS1P3L-M3/84A",
+            "BOM_JLCPCB Part Class": "Extended Part",
+            "puuid": "b524210af56c444c885f09e6bc751976",
+            "uuid": "375efc1681694807b2f384bc34b2c26f"
           }
         ],
         [
@@ -1686,11 +1702,11 @@
           }
         ]
       ],
-      "updateTime": 1678576608,
+      "updateTime": 1679354153,
       "createTime": 1676065871,
       "histories": [],
       "created_at": "2023-02-10 13:51:11",
-      "updated_at": "2023-03-11 15:16:48"
+      "updated_at": "2023-03-20 16:15:53"
     },
     {
       "uuid": "2892688f131ca94f1ce014716d0b23b1",
@@ -4162,7 +4178,7 @@
         "df6c31a494854168af6fc0f668e7abca": 1,
         "50dc3b6111d549ddb6686d77ab1ebdd8": 1,
         "d7ea8178954e4a5cafb2afbdc9048aa5": 1,
-        "b524210af56c444c885f09e6bc751976": 1,
+        "b524210af56c444c885f09e6bc751976": 2,
         "bade90667a6e4731855e9a223387b8a6": 6,
         "cfd96394a7b7496aa305f9c7adf4cc80": 7,
         "7a5c41e42d7442b78e2a9154cf5eb4a1": 1,
@@ -4170,11 +4186,11 @@
         "2ee8eb13a0124a108e622ce40c0c25a8": 8
       },
       "BOM": [],
-      "updateTime": 1677004113,
+      "updateTime": 1679356110,
       "createTime": 1676579560,
       "histories": [],
       "created_at": "2023-02-16 12:32:40",
-      "updated_at": "2023-02-21 10:28:33"
+      "updated_at": "2023-03-20 16:48:30"
     }
   ],
   "sort": [
@@ -4187,5 +4203,5 @@
   "title": "BigPowerBox",
   "foldername": "BigPowerBox",
   "schfilename": "BigPowerBox.json",
-  "schfilemtime": 1678576608355
+  "schfilemtime": 1679354153141
 }

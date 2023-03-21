@@ -14,14 +14,14 @@ This Ascom driver will work with the open source hardware BigPowerBox or any har
 
 The driver exposes all the power ports and sensors of the device via Ascom Switches. The polling frequency will depend on the client software. For eg. N.I.N.A polls each switch's name and value every 2sec.
 
-The configuration pane allows to set the names of the power ports. Note that upon launch the configuration dialog does not know the names saved on the device, please set the comm port and press OK, connect and then re-access the configuration dialog. The names saved on the device will be populated and will be editable. Any modifications done to the port names prior to connecting to the device will be discarded.
+The configuration pane allows to set the names of the power ports. Note that upon launch the configuration dialog does not know the names saved on the device, please set the comm port and press OK, connect and then re-access the configuration dialog. The names saved on the device will be populated and will be editable. Any modifications done to the port names prior to connecting to the device will be discarded. Note that the first time you read the port names on a brand new board you will get garbage as the firmware does not initialize the EEPROM at initial boot. Actually there is no mechanism for the firmware to know if a valid name is stored.
 
 # Principles of Operation
 The driver is built as a COM server. This allows multiple clients to connect and control the switches concurrently.
 The server driver is started when the first client connects. The server connects to the hardware via a USB serial port, retrieves the board description and populates the internal data structures.  
 The client polling and hardware polling are decoupled for performance reasons. Once connected the hardware driver starts a polling thread that polls the hardware ( status command ) every ***UPDATEINTERVAL*** seconds ( 2 in the Release version) and updates the internal data structures. When a client requests a port value or status the hardware driver responds with the value stored in the data structure. When a client wants to update a switch the command is directly forwarded to the hardware.  
 So in short *Read* operations are asynchronous and *Write* oprations are synchronous.  
-The sevrer maintains a list of clients and shuts down once all clients have disconnected.
+The server maintains a list of clients and shuts down once all clients have disconnected.
 
 # Installing the driver 
 Downlad the installer from the [realeases](https://github.com/MichelMoriniaux/BigPowerBox/releases) tab and run it, it should register the server and make the driver available in the ASCOM choser. 

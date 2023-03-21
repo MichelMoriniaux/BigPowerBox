@@ -33,7 +33,7 @@ To build you will need to install the following packages into your Arduino Libra
 ***[MemoryFree](https://github.com/mpflaga/Arduino-MemoryFree)*** only for debug purposes ( used it to make sure I was not fragmenting the memory )
 
 # Modularity
-I originaly wanted this code to be generic and customizable for any board layout by only customizing *board.h*. This is still a work in progreass as I took shortcuts to get a working prototype out. The main variable is the boardSignature string that defines the list of ports, their order and their types. This also defines how the status string is presented. The follwing comment in *board.h* defines the boardSignature:
+I originaly wanted this code to be generic and customizable for any board layout by only customizing *board.h*. This is still a work in progreass as I took shortcuts to get a working prototype out. The main variable is the boardSignature string that defines the list of ports, their order and their types. This also defines how the status string is presented. The following comment in *board.h* defines the boardSignature:
 
     // Board signature
     //  s: arduino addressable switchable port
@@ -47,8 +47,8 @@ I originaly wanted this code to be generic and customizable for any board layout
 
 # Storage
 The EEPROM on the Atmel328 is 1024 bytes and it's cells are limited to 100k writes.  
-We reserve the first 16x14 bytes (224 bytes) to store the port names ( this includes the trailing '\0' so port names are limited to 15 chars). We don't expect these to change often so no special scheme is implemented to save write cycles.  
-Starting at byte 224 we store the configuration. The configuration is 6 bytes long and contains the port statuses and a validity flag. The config is saved everytime a port changes state. To limit EEPROM wear we write the config to the next 6 following bytes. At startup we need to find this config so that is where the validity flag comes into play.
+We reserve the first 16x14 bytes (224 bytes) to store the port names ( this includes the trailing '\0' so port names are limited to 15 chars). We don't expect these to change often so no special scheme is implemented to save write cycles. There is no provision to flag a name as valid, we could have used the first byte and limit the name to 14 chars.  
+Starting at byte 224 we store the configuration. The configuration is 6 bytes long and contains the port statuses and a validity flag. The config is saved every time a port changes state. To limit EEPROM wear we write the config to the next 6 following bytes. At startup we need to find this config so that is where the validity flag comes into play.
 
 # Command Protocol
 Every command and it's reply starts with a '>' and ends with a '#' 

@@ -1,9 +1,9 @@
-﻿# BigPowerBox Arduino Firmware
+﻿# BigPowerBox ASCOM Driver
 An open source power distribution switch for 12VDC applications
 
-Please see the README for the firmware before reading this file
+Please see the [README for the firmware](https://github.com/MichelMoriniaux/BigPowerBox/blob/main/Arduino/BigPowerBox/README.md) before reading this file
 
-- [BigPowerBox Arduino Firmware](#bigpowerbox-arduino-firmware)
+- [BigPowerBox ASCOM Driver](#bigpowerbox-ascom-driver)
 - [Introduction](#introduction)
 - [Principles of Operation](#principles-of-operation)
 - [Installing the driver](#installing-the-driver)

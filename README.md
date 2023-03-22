@@ -67,20 +67,22 @@ To Operate this device you will need the following
   - Kstars / Ekos
 
 ### Build
-To build the device and customize it you will need:
+To build the device you will need:
 - a spare arduino with an ICSP cable ( to burn the bootloader ). I used an arduino nano from which I cut the traces to the RESET pin on the ICSP header and soldered it to pin D10. Replaced the header with a set of pogo pins and done.
   - [Pogo pins](https://www.amazon.com/gp/product/B075Q25BK3)
   - [Arduino](https://www.amazon.com/gp/product/B0713XK923)
-- Arduino dev environment
-- for ASCOM the Ascom dev platform and Visual Studio 2022
-- for Linux Indi and build-tools
-- EasyEDA
+- Arduino dev environment  
 - 3d printer + slicer
 - [M3 8mm flat head bolts](https://www.amazon.com/gp/product/B07WZL3Z7H)
 - [M3 inserts](https://www.amazon.com/gp/product/B08YYGRCBG)
 - [GX12 connectors](https://www.amazon.com/gp/product/B01MPXOOI3)
 - [SHT31](https://www.amazon.com/gp/product/B07ZSZW92J)
 - [XT60 connectors](https://www.amazon.com/gp/product/B07Q2SJSZ1)
+To Customize the software you will additionally need:
+- for ASCOM the Ascom dev platform and Visual Studio 2022
+- for Linux Indi and build-tools  
+To customize the hardware you will also need:
+- EasyEDA
 
 ## PCB picture
 ![PCB Picture](Resources/pcb.jpg)

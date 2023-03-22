@@ -77,10 +77,12 @@ To build the device you will need:
 - [M3 inserts](https://www.amazon.com/gp/product/B08YYGRCBG)
 - [GX12 connectors](https://www.amazon.com/gp/product/B01MPXOOI3)
 - [SHT31](https://www.amazon.com/gp/product/B07ZSZW92J)
-- [XT60 connectors](https://www.amazon.com/gp/product/B07Q2SJSZ1)
+- [XT60 connectors](https://www.amazon.com/gp/product/B07Q2SJSZ1)  
+
 To Customize the software you will additionally need:
 - for ASCOM the Ascom dev platform and Visual Studio 2022
 - for Linux Indi and build-tools  
+
 To customize the hardware you will also need:
 - EasyEDA
 

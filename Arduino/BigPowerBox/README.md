@@ -7,6 +7,7 @@ Please see the README for the hardware before reading this file
 - [Logic](#logic)
 - [Required Libraries](#required-libraries)
 - [Modularity](#modularity)
+- [Hardware expansion](#hardware-expansion)
 - [Storage](#storage)
 - [Command Protocol](#command-protocol)
   - [Available commands:](#available-commands)
@@ -29,7 +30,9 @@ To build you will need to install the following packages into your Arduino Libra
 ***EEPROM***      should be included by default in your base install  
 ***Wire***        One Wire Lib for i2c  
 ***Adafruit_MCP23XXX*** to operate the MCP23017 i2c controlled I/O expander on the board  
-***Adafruit_SHT31*** for SHT3x sensor attached to RJ12 port  
+***Adafruit_SHT31*** for SHT3x temperature/humidity sensor  
+***Adafruit_AHTX0*** for the cheap AHT10 temperature/humidity sensor
+***SparkFun_I2C_Mux_Arduino_Library*** for the PCA9548A i2c multiplexer
 ***[MemoryFree](https://github.com/mpflaga/Arduino-MemoryFree)*** only for debug purposes ( used it to make sure I was not fragmenting the memory )
 
 # Modularity
@@ -44,6 +47,17 @@ I originaly wanted this code to be generic and customizable for any board layout
     //  h: humidity probe
     // always-on ports always last followed by t then h
     const String boardSignature = "mmmmmmmmppppaath";
+
+# Hardware expansion
+The board is expandable through the exposed i2c interface via the RJ12 connector. Currently are supported SHT31, AHT10 and the PCA9548A i2c multiplexer, allowing you to build complex temperature probe setups. The setups allow you to either have a simple Temperature / Humidity sensor to turn on the configured PWM ports when the temperature dips below the dewpoint or have a more complex setup with dedicated temperature feedback for each PWM port (adjusting each port output to maintain +3C above the dewpoint).  
+The RJ12 port has the following pinout  
+
+    pin 1: NC
+    pin 2: GND
+    pin 3: SDA
+    pin 4: SCL
+    pin 5: 5V
+    pin 6: NC
 
 # Storage
 The EEPROM on the Atmel328 is 1024 bytes and it's cells are limited to 100k writes.  
@@ -87,3 +101,9 @@ example commands:
 |`O:<dd>`|ON|`OOK`|Turn port `<dd>` On|	
 |`F:<dd>`|OFF|`FOK`|Turn port `<dd>` Off|
 |`W:<dd>:<level>`|set PWM level|`WOK`|set the port `<dd>` to `<level>` level is an integer between 0 (Off) and 255 (full On)|
+|`C:<dd>:<mode>`|set PWM port mode|`COK`|set the port `<dd>` to `<mode>` mode is an integer: |
+||||0: pwm adjustable port|
+||||1: behave like and ON/OFF port|
+||||2: dewpoint mode: when the temperature measured by the reference probe dips below the dewpoint turn on the port to the preset value, turn it off if the temperature rises above the dewpoint. requires a connected temp/humid probe|
+||||3: temperature controlled mode: the port has a dedicated temperature probe that allows to turn off the port when the temperature of the dedicated probe rises above the dewpoint |
+|`G:<dd>`|get PWM port mode|`G:<dd>:<mode>`|get `<mode>` of the port `<dd>`|

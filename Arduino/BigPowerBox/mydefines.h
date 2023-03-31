@@ -14,6 +14,7 @@
 //-----------------------------------------------------------------------
 #define MAXINVOLTS          14.4          // maximum allowed volts In, shutdown all output ports if exceeded
 #define REFRESH             200           // read port values every REFRESH milliseconds
+#define TEMPITVL            1             // adjust dew heaters every TEMPITVL minutes
 #define SERIALPORTSPEED     9600          // 9600, 14400, 19200, 28800, 38400, 57600
 #define QUEUELENGTH         5             // number of commands that can be saved in the serial queue
 #define MAXCOMMAND          21            // max length of a command
@@ -32,7 +33,7 @@
 //-----------------------------------------------------------------------
 // DEBUGGING
 //-----------------------------------------------------------------------
-//#define DEBUG 1
+#define DEBUG 1
 #ifdef DEBUG
 #define DPRINT(...) Serial.print(__VA_ARGS__)
 #define DPRINTLN(...) Serial.println(__VA_ARGS__)

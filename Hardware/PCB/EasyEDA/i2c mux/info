@@ -1,0 +1,126 @@
+{
+  "uuid": "0855df88174244b7adb786253a655e89",
+  "path": "Offline/i2c%20mux",
+  "name": "i2c mux",
+  "content": "",
+  "created_at": "2023-04-30 11:51:43",
+  "updated_at": "2023-04-30 12:59:34",
+  "stick": "",
+  "documents": [
+    {
+      "uuid": "f30305bf1bbc4f45357438a11dfdac97",
+      "title": "Sheet_1",
+      "description": "",
+      "docType": "1",
+      "master": "",
+      "thumb": "/images/thumb-default.png",
+      "components": {
+        "029b1071b94d4f798c63168ff8141d72": 6,
+        "bb6a760c7722159205a39a6b88f02971": 1,
+        "b210af5a1436310a86e8b108e2e5a90b": 6,
+        "7a0c79967d0e7ae293044fb82790899a": 1
+      },
+      "BOM": [
+        [
+          "Value",
+          "Quantity",
+          "Package",
+          "Components",
+          "CustomPara"
+        ],
+        [
+          "10uF",
+          1,
+          "C0805",
+          "C1",
+          {
+            "BOM_Supplier": "LCSC",
+            "BOM_Manufacturer Part": "CL21A106KAYNNNE",
+            "BOM_Manufacturer": "SAMSUNG(三星)",
+            "BOM_Supplier Part": "C15850",
+            "BOM_JLCPCB Part Class": "Basic Part",
+            "puuid": "2ee8eb13a0124a108e622ce40c0c25a8",
+            "uuid": "7a0c79967d0e7ae293044fb82790899a"
+          }
+        ],
+        [
+          "10kΩ",
+          6,
+          "R0603",
+          "R1,R2,R3,R4,R5,R6",
+          {
+            "BOM_Supplier": "LCSC",
+            "BOM_Manufacturer": "UNI-ROYAL(厚声)",
+            "BOM_Manufacturer Part": "0603WAF1002T5E",
+            "BOM_Supplier Part": "C25804",
+            "BOM_JLCPCB Part Class": "Basic Part",
+            "puuid": "398691f1f785460098bbe5ee6590333c",
+            "uuid": "b210af5a1436310a86e8b108e2e5a90b"
+          }
+        ],
+        [
+          "DS1133-S60BPX",
+          6,
+          "RJ11-TH_DS1133-S60BPX",
+          "RJ1,RJ2,RJ3,RJ4,RJ5,RJ6",
+          {
+            "BOM_Supplier": "LCSC",
+            "BOM_Manufacturer": "CONNFLY",
+            "BOM_Manufacturer Part": "DS1133-S60BPX",
+            "BOM_Supplier Part": "C77859",
+            "BOM_JLCPCB Part Class": "Extended Part",
+            "puuid": "60cec970f25b48e1a4d2d9d7f0b37443",
+            "uuid": "029b1071b94d4f798c63168ff8141d72"
+          }
+        ],
+        [
+          "PCA9548APW,118",
+          1,
+          "TSSOP-24_L7.8-W4.4-P0.65-LS6.4-BL",
+          "U1",
+          {
+            "BOM_Supplier": "LCSC",
+            "BOM_Manufacturer Part": "PCA9548APW,118",
+            "BOM_Manufacturer": "NXP(恩智浦)",
+            "BOM_Supplier Part": "C21198",
+            "BOM_JLCPCB Part Class": "Extended Part",
+            "puuid": "b23a3cd50ffb4bd580712ba1d52d77dd",
+            "uuid": "bb6a760c7722159205a39a6b88f02971"
+          }
+        ]
+      ],
+      "updateTime": 1682882361,
+      "createTime": 1682880704,
+      "histories": [],
+      "created_at": "2023-04-30 11:51:44",
+      "updated_at": "2023-04-30 12:19:21"
+    },
+    {
+      "uuid": "2f82fea330858ed54e81852cc5313e66",
+      "puuid": "0855df88174244b7adb786253a655e89",
+      "title": "PCB_i2c mux",
+      "filename": "PCB_i2c mux.json",
+      "description": "",
+      "docType": "3",
+      "master": "",
+      "thumb": "/images/thumb-default.png",
+      "components": {
+        "2ee8eb13a0124a108e622ce40c0c25a8": 1,
+        "398691f1f785460098bbe5ee6590333c": 6,
+        "60cec970f25b48e1a4d2d9d7f0b37443": 6,
+        "b23a3cd50ffb4bd580712ba1d52d77dd": 1
+      },
+      "BOM": [],
+      "updateTime": 1682884774,
+      "createTime": 1682884774,
+      "histories": [],
+      "created_at": "2023-04-30 12:59:34",
+      "updated_at": "2023-04-30 12:59:34"
+    }
+  ],
+  "sort": [],
+  "title": "i2c mux",
+  "foldername": "i2c mux",
+  "schfilename": "i2c mux.json",
+  "schfilemtime": 1682882361436
+}

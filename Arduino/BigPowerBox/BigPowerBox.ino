@@ -15,6 +15,7 @@
 #include <Adafruit_SHT31.h>             // for SHT3x sensor attached to RJ12 port
 #include <SparkFun_I2C_Mux_Arduino_Library.h>
 #include <Adafruit_AHTX0.h>
+#include <PIDController.h>
 
 #ifdef DEBUG
 #include <MemoryFree.h>
@@ -24,11 +25,14 @@ Adafruit_MCP23X17 mcp;
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
 QWIICMUX imux;
 Adafruit_AHTX0 aht10;
+PIDController pid[4];   // up to 4 pid controllers, one for each PWM port
 
 int probeCount = 0;
+int memfree = 0;
+int prevmemfree = 0;
 
 const String programName = "BigPowerBox";
-const String programVersion = "002";
+const String programVersion = "003";
 const String programAuthor = "Michel Moriniaux";
 
 struct config_t powerBoxConf;
@@ -43,9 +47,9 @@ int queueHead = -1;
 int queueCount = 0;
 
 // Machine states
-const enum FSMStates { stateIdle, stateRead, stateDew, stateSwap };
+enum FSMStates { stateIdle, stateRead, stateDew, stateSwap };
 // PWM port modes
-const enum PWMModes { variable, switchable, dewHeater, tempFeedback};
+enum PWMModes { variable, switchable, dewHeater, tempFeedback};
 // Commands
 String line;                              // command buffer
 String status;                            // status string buffer
@@ -93,7 +97,7 @@ void push(char command[MAXCOMMAND]) {
 bool updateEEPROMCheck( config_t savedConfig ) {
   if ( savedConfig.portStatus != powerBoxConf.portStatus )
     return true;
-  for ( int i=0; i < sizeof(powerBoxConf.pwmPorts); i++ )
+  for ( int i=0; i < sizeof(powerBoxConf.pwmPorts); i++ ) {
     if ( savedConfig.pwmPorts[i] != powerBoxConf.pwmPorts[i] )
       return true;
     if ( savedConfig.pwmPortMode[i] != powerBoxConf.pwmPortMode[i] )
@@ -102,6 +106,7 @@ bool updateEEPROMCheck( config_t savedConfig ) {
       return true;
     if ( savedConfig.pwmPortTempOffset[i] != powerBoxConf.pwmPortTempOffset[i] )
       return true;
+  }
   DPRINTLN(F("- updateEEPROMCheck False"));
   return false;
 }
@@ -157,8 +162,12 @@ void writeNameToEEPROM(int port, const String &name) {
 void setDefaults() {
   powerBoxConf.currentData = CURRENTCONFIGFLAG;
   powerBoxConf.portStatus = ALLOFF;
-  for ( int i=0; i < sizeof(powerBoxConf.pwmPorts); i++ )
+  for ( int i=0; i < sizeof(powerBoxConf.pwmPorts); i++ ) {
     powerBoxConf.pwmPorts[i] = PWMMIN;
+    powerBoxConf.pwmPortMode[i] = variable;
+    powerBoxConf.pwmPortPreset[i] = PWMMIN;
+    powerBoxConf.pwmPortTempOffset[i] = 0;
+  }
   currentConfAddr = EEPROMCONFBASE;
   writeConfigToEEPROM();                                   // update values in EEPROM
 }
@@ -253,13 +262,7 @@ void getStatusString() {
   status += ":";
   // input Volts
   status += powerBoxStatus.inputVolts;
-  for ( int i = 0; i < 8 ; i++ ) {
-    if ( envProbes[i] ) {
-      status += ":";
-      // temperature
-      //status += aht10.temp;
-    }
-  }
+  // Temperatures
   if (haveTemp) {
     status += ":";
     // temperature
@@ -267,6 +270,14 @@ void getStatusString() {
     status += ":";
     // humidity
     status += powerBoxStatus.humid;
+    status += ":";
+    // dewpoint
+    status += powerBoxStatus.dewpoint;
+    for ( int i = 1; i < probeCount ; i++ ) {
+      status += ":";
+      // temperature
+      status += powerBoxStatus.tempProbe[i];
+    }
   }
 }
 
@@ -380,6 +391,18 @@ void setPWMPortLevel(int port, int level) {
 }
 
 
+// same function but don't write the EEPROM
+void setDewPortLevel(int port, int level) {
+  if ( boardSignature[port] == 'p' ) {
+    // PWM on/off port
+    if (powerBoxConf.pwmPorts[port - boardSignature.indexOf("p")] != level) {
+      analogWrite(ports2Pin[port - 1], level);
+      powerBoxConf.pwmPorts[port - boardSignature.indexOf("p")] = level;
+    }
+  }
+}
+
+
 void swapPorts() {
   // when the controller starts
   // portIndex = 0
@@ -426,25 +449,29 @@ void swapPorts() {
 //-----------------------------------------------------------------------
 // Dew Control
 //-----------------------------------------------------------------------
-// TODO: need timers for hysteresis
 void adjustDewHeaters() {
   int pwmPort;
   int pwmPortNum = 0;
+  int level;
 
-  pwmPortNum = sizeof(powerBoxStatus.pwmPortTemp) / sizeof(float);
+  pwmPortNum = sizeof(powerBoxConf.pwmPorts);
   for ( int port=0; port < pwmPortNum ; port++) {
     if ( powerBoxConf.pwmPortMode[port] == dewHeater ) {
       if ( powerBoxStatus.temp < powerBoxStatus.dewpoint ) {
         setDewPortLevel(port, int(powerBoxConf.pwmPortPreset[port]));
       } else if ( powerBoxStatus.temp > powerBoxStatus.dewpoint + powerBoxConf.pwmPortTempOffset[port]) {
-        decrementDewPortLevel(port);
+        setDewPortLevel(port, PWMMIN);;
       }
     }
     if ( powerBoxConf.pwmPortMode[port] == tempFeedback ) {
-      if ( powerBoxStatus.pwmPortTemp[port] < powerBoxStatus.dewpoint ) {
-        incrementDewPortLevel(port);
-      } else if ( powerBoxStatus.pwmPortTemp[port] > powerBoxStatus.dewpoint + powerBoxConf.pwmPortTempOffset[port]) {
-        decrementDewPortLevel(port);
+      if ( powerBoxStatus.tempProbe[port] < powerBoxStatus.dewpoint ) {
+        pid[port].setpoint(powerBoxStatus.dewpoint + powerBoxConf.pwmPortTempOffset[port]);
+        level = int(pid[port].compute(powerBoxStatus.tempProbe[port]));
+        DPRINT(F("tempfeedbck set port "));
+        DPRINT(port);
+        DPRINT(F(" power: "));
+        DPRINTLN(level);
+        setDewPortLevel(port, level);
       }
     }
   }
@@ -454,39 +481,78 @@ void adjustDewHeaters() {
 //-----------------------------------------------------------------------
 // Temperature probes discovery and helpers
 //-----------------------------------------------------------------------
-void discoverProbes(char probeType) {
+void discoverProbes(int muxPort) {
   bool probeFound = false;
+  bool skip_44 = false;
+  bool skip_45 = false;
+  bool skip_10 = false;
+
+  // determine if we need to skip some discoveries (eg. skip the non muxed probes already found)
+  if (muxPort != 255) {
+    // only skip if we are discovering muxed probes
+    for (int probe = 0; probe < probeCount; probe++){
+      if (powerBoxStatus.tempProbePort[probe] == 255) {
+        if (powerBoxStatus.tempProbeType[probe] == SHT31_0x44) { skip_44 = true; }
+        if (powerBoxStatus.tempProbeType[probe] == SHT31_0x45) { skip_45 = true; }
+        if (powerBoxStatus.tempProbeType[probe] == AHT10) { skip_10 = true; }
+      }
+    }
+  }
 
   // check for SHT3x sensor
   // the SHT3x is much more precise and reliable than the AHT10 but is also MUCH more expensive ~8$
   // we check for these first as we use the first sensor found as the reference sensor, all subsequent sensors
   // are used only for temperature for PWM dew heater feedback
-  probeFound = sht31.begin(0x44);
-  if (probeFound) {
-    DPRINTLN(F("Found SHT3x Temp/Humid monitor"));
-    boardSignature += probeType;
-    haveTemp = true;
-    powerBoxStatus.tempProbeList[probeCount++] = SHT31_0x44;
+
+  // if we have this one as native (muxPort = 255) we cannot have one muxed so lets check if we should skip it
+  if (!skip_44) {
+    probeFound = sht31.begin(0x44);
+    if (probeFound) {
+      DPRINTLN(F("Found SHT3x_44 Temp/Humid monitor"));
+      if (probeCount > 0)
+        boardSignature += 't';
+      else
+        boardSignature += 'f';
+      haveTemp = true;
+      powerBoxStatus.tempProbePort[probeCount] = muxPort;
+      powerBoxStatus.tempProbeType[probeCount++] = SHT31_0x44;
+      probeFound = false;
+    }
   }
   // check for an SHT3x at the other address
-  probeFound = sht31.begin(0x45); // 0x45 is an alternate address for the SHT31
-  if (probeFound) {
-    DPRINTLN(F("Found SHT3x Temp/Humid monitor"));
-    boardSignature += probeType;
-    haveTemp = true;
-    powerBoxStatus.tempProbeList[probeCount++] = SHT31_0x45;
+  // if we have this one as native (muxPort = 255) we cannot have one muxed so lets check if we should skip it
+  if (!skip_45) {
+    probeFound = sht31.begin(0x45); // 0x45 is an alternate address for the SHT31
+    if (probeFound) {
+      DPRINTLN(F("Found SHT3x_45 Temp/Humid monitor"));
+      if (probeCount > 0)
+        boardSignature += 't';
+      else
+        boardSignature += 'f';
+      haveTemp = true;
+      powerBoxStatus.tempProbePort[probeCount] = muxPort;
+      powerBoxStatus.tempProbeType[probeCount++] = SHT31_0x45;
+      probeFound = false;
+    }
   }
 
   // check for AHT10
   // the AHT10 is cheap ~1$ but less reliable
-  probeFound = aht10.begin();
-  if (probeFound) {
-    DPRINTLN(F("found AHT10"));
-    boardSignature += probeType;
-    haveTemp = true;
-    powerBoxStatus.tempProbeList[probeCount++] = AHT10;
+  // if we have this one as native (muxPort = 255) we cannot have one muxed so lets check if we should skip it
+  if (!skip_10) {
+    probeFound = aht10.begin();
+    if (probeFound) {
+      DPRINTLN(F("found AHT10 Temp/Humid monitor"));
+      if (probeCount > 0)
+        boardSignature += 't';
+      else
+        boardSignature += 'f';
+      haveTemp = true;
+      powerBoxStatus.tempProbePort[probeCount] = muxPort;
+      powerBoxStatus.tempProbeType[probeCount++] = AHT10;
+      probeFound = false;
+    }
   }
-
 }
 
 
@@ -582,17 +648,35 @@ void processSerialCommand() {
       mode = (int)optionString.toInt();
       powerBoxConf.pwmPortMode[port - boardSignature.indexOf("p")] = byte(mode);
       sendPacket(">COK#");
+      writeConfigToEEPROM();
       break;
     case 'G':       // get PWM port mode command '>G:nn#', return '>G:nn:m#'
       optionString = receiveString.substring(2, receiveString.indexOf(":",3));
       port = (int)optionString.toInt();
       mode = int(powerBoxConf.pwmPortMode[port - boardSignature.indexOf("p")]);
-      if ( mode < 0 || mode > 3 )
+      if ( mode < 0 || mode > 3 ) {
         powerBoxConf.pwmPortMode[port - boardSignature.indexOf("p")] = byte(variable);
+        mode = byte(variable);
+      }
       sprintf(replyChars, ">G:%02d:%d#", port, mode);
       sendPacket(replyChars);
       break;
-    // TODO add command to set and read powerBoxConf.pwmPortTempOffset
+    case 'T':       // configure PWM port temp offset command '>T:nn:m#', return OK
+      optionString = receiveString.substring(2, receiveString.indexOf(":",3));
+      port = (int)optionString.toInt();
+      optionString = receiveString.substring(receiveString.indexOf(":",3) + 1, receiveString.length());
+      mode = (int)optionString.toInt();
+      powerBoxConf.pwmPortTempOffset[port - boardSignature.indexOf("p")] = byte(mode);
+      sendPacket(">TOK#");
+      writeConfigToEEPROM();
+      break;
+    case 'H':       // get PWM port temp Offset command '>H:nn#', return '>H:nn:m#'
+      optionString = receiveString.substring(2, receiveString.indexOf(":",3));
+      port = (int)optionString.toInt();
+      mode = int(powerBoxConf.pwmPortTempOffset[port - boardSignature.indexOf("p")]);
+      sprintf(replyChars, ">H:%02d:%d#", port, mode);
+      sendPacket(replyChars);
+      break;
     default:
       break;
   }
@@ -624,25 +708,37 @@ void setup() {
   // discover external i2c peripherals
   // currently we support a 1:8 multiplexer for peripherals with the same address
   // and idividual SHT31 or AHT10 probes
-  //
-  // first lets look for an sht31 or AHT10 probe, if we find one this will be our refence environmental probe
+
+  // lets start by discovering the mux and disable all ports
+  if (imux.begin())
+  {
+    DPRINT(F("I2C Mux detected. disabling all ports, port: "));
+    for ( int i=0; i < 8 ; i++ ) {
+      DPRINT(i);
+      imux.disablePort(i);
+    }
+    DPRINTLN(F(" Done"));
+  }
+  
+  // now lets look for non=muxed sht31 or AHT10 probe, if we find one this will be our refence environmental probe
   // note: if we find an AHT probe at this stage we cannot have anymore multiplexed as they only have one address
   // same-ish goes for SHT31.So possible setups is an SHT31 and multiple AHT10s on the mux or an AHT10 and multiple 
   // SHT31s on the mux or even simpler: every probe on the mux
   // corner case: if we find both then we can't have a mux for temp probes so the SHT31 will be the reference and
   // the AHT10 will control the first PWM port 
-  discoverProbes('f');
-  // now check for an i2c muxer, if we have not found previous probes then the first one found here (attached to mux port 0)
+  discoverProbes(255);
+  // now discover the probes on the mux, if we have not found previous probes then the first one found here (attached to mux port 0)
   // will be our reference env probe all subsequent ones will be used to control PWM ports if they are configured for
   // dew heaters
-  if (imux.begin())
-  {
-    DPRINTLN(F("Mux detected. Discovery started"));
-    for ( int i=0; i < 8 ; i++ ) {
-      imux.setPort(i);
-      discoverProbes('g');
-    }
+
+  DPRINT(F("I2C Mux Discovery started, port: "));
+  for ( int i=0; i < 8 ; i++ ) {
+    DPRINT(i);
+    imux.enablePort(i);
+    imux.setPort(i);
+    discoverProbes(i);
   }
+  DPRINTLN(F(" Done"));
 
   //----- PWM frequency for D3 & D11 -----
   // may be usefull to drive flat panels
@@ -718,6 +814,13 @@ void setup() {
   portIndex = 0;
   portMax = sizeof(powerBoxStatus.portAmps) / sizeof(float);
 
+  // initialize the PID controllers even if we don't use themn
+  for (int i=0; i < 4; i++) {
+    pid[i].begin();          // initialize the PID instance
+    pid[i].tune(KP, KI, KD);       // Tune the PID, arguments: kP, kI, kD
+    pid[i].limit(0, 255);
+  }
+
   DPRINTLN("Setup done");
 
 }
@@ -766,58 +869,17 @@ void loop() {
           break;
       }
 
-      // TODO rewrite for new temp probe logic
-      // get temp and humidity
-      if ( haveTemp ) {
-        switch (powerBoxStatus.tempProbeList[0]) {
-          case SHT31_0x44:
-            sht31.begin(0x44);
-            sht31.readBoth(&powerBoxStatus.temp, &powerBoxStatus.humid);
-            break;
-          case SHT31_0x45:
-            sht31.begin(0x45);
-            sht31.readBoth(&powerBoxStatus.temp, &powerBoxStatus.humid);
-            break;
-          case AHT10:
-            sensors_event_t temp;
-            sensors_event_t humid;
-            aht10.getEvent(&temp, &humid);
-            powerBoxStatus.temp = temp.temperature;
-            powerBoxStatus.humid = temp.relative_humidity;
-            break;
-        }
-        powerBoxStatus.dewpoint = powerBoxStatus.temp - ((100 - powerBoxStatus.humid) / 5);
-
-        // cycle through the other sensors to get the temperatures for the PWM ports
-        for ( int i = 1 ; i < sizeof(powerBoxStatus.tempProbeList) ; i++ ) {
-          switch (powerBoxStatus.tempProbeList[i]) {
-            case SHT31_0x44:
-              sht31.begin(0x44);
-              powerBoxStatus.pwmPortTemp[i - 1] = sht31.readTemperature();
-              break;
-            case SHT31_0x45:
-              sht31.begin(0x45);
-              powerBoxStatus.pwmPortTemp[i - 1] = sht31.readTemperature();
-              break;
-            case AHT10:
-              sensors_event_t temp;
-              sensors_event_t humid;
-              aht10.getEvent(&temp, &humid);
-              powerBoxStatus.pwmPortTemp[i - 1] = temp.temperature;
-              break;
-          }
-        }
-      }
 #ifdef DEBUG
       //char buf[50];
       //sprintf(buf, "- loop: iV=%d, iI=%d, oI=%d, p=%d, mem=%d", analogRead(VSIN), analogRead(ISIN), analogRead(ISOUT), portIndex, freeMemory());
       //DPRINTLN(buf);
       //DPRINTLN(mcp.readGPIO());
-      // DPRINT(F("Mem: "));
-      // DPRINTLN(freeMemory());
-      // DPRINT(F(" Status "));
-      // getStatusString();
-      // DPRINTLN(status);
+      memfree = freeMemory();
+      if (memfree != prevmemfree) {
+        prevmemfree = memfree;
+        DPRINT(F("Mem: "));
+        DPRINTLN(memfree);
+      }
 #endif
       FSMState = stateDew;
       now = millis();
@@ -828,6 +890,54 @@ void loop() {
       // adjust PWM ports for dew heater control, do this every minute only
       now = millis();
       if ( now > lastm + (TEMPITVL * 60000) ) {
+        // get temp and humidity
+        if ( haveTemp ) {
+          switch (powerBoxStatus.tempProbeType[0]) {
+            case SHT31_0x44:
+              sht31.begin(0x44);
+              sht31.readBoth(&powerBoxStatus.temp, &powerBoxStatus.humid);
+              break;
+            case SHT31_0x45:
+              sht31.begin(0x45);
+              sht31.readBoth(&powerBoxStatus.temp, &powerBoxStatus.humid);
+              break;
+            case AHT10:
+              sensors_event_t temp;
+              sensors_event_t humid;
+              aht10.getEvent(&humid, &temp);
+              powerBoxStatus.temp = temp.temperature;
+              powerBoxStatus.humid = humid.relative_humidity;
+              break;
+          }
+          powerBoxStatus.tempProbe[0] = powerBoxStatus.temp;
+          powerBoxStatus.dewpoint = powerBoxStatus.temp - ((100 - powerBoxStatus.humid) / 5);
+
+          // cycle through the other sensors to get the temperatures for the PWM ports
+          for ( int i = 1 ; i < probeCount ; i++ ) {
+            imux.setPort(powerBoxStatus.tempProbePort[i]);
+            switch (powerBoxStatus.tempProbeType[i]) {
+              case SHT31_0x44:
+                sht31.begin(0x44);
+                powerBoxStatus.tempProbe[i] = sht31.readTemperature();
+                break;
+              case SHT31_0x45:
+                sht31.begin(0x45);
+                powerBoxStatus.tempProbe[i] = sht31.readTemperature();
+                break;
+              case AHT10:
+                sensors_event_t temp;
+                sensors_event_t humid;
+                aht10.getEvent(&humid, &temp);
+                powerBoxStatus.tempProbe[i] = temp.temperature;
+                break;
+            }
+          }
+        }
+#ifdef DEBUG
+        DPRINT(F(" Status: "));
+        getStatusString();
+        DPRINTLN(status);
+#endif
         adjustDewHeaters();
         lastm = now;
       }

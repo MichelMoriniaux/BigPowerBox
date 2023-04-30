@@ -18,7 +18,6 @@
 //  t: temperature probe
 //  h: humidity probe
 //  f: temp + humidity probe
-//  g: multiplexed temp probe
 // always-on ports always last followed by t then h
 String boardSignature = "mmmmmmmmppppaa";
 // status string
@@ -63,14 +62,15 @@ struct config_t {
 };
 
 struct status_t {
-    float portAmps[14];
+    float portAmps[14];                   // size of array must be equal to boardSignature.length() this holds the current for each port
     float inputAmps;
     float inputVolts;
     float temp;
     float humid;
     float dewpoint;
-    float pwmPortTemp[4];
-    byte  tempProbeList[5];               // type of probe found. limit them to 5 more would be overkill, like 640k RAM
+    float tempProbe[5];                   // tempearture reading in C.
+    byte  tempProbePort[5];               // i2c muc port on which the probe is found, 255 is used for non mux.
+    byte  tempProbeType[5];               // type of probe found. limit them to 5 more would be overkill, like 640k RAM
 };
 
 //-----------------------------------------------------------------------

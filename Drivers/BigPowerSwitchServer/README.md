@@ -21,7 +21,13 @@ The driver is built as a COM server. This allows multiple clients to connect and
 The server driver is started when the first client connects. The server connects to the hardware via a USB serial port, retrieves the board description and populates the internal data structures.  
 The client polling and hardware polling are decoupled for performance reasons. Once connected the hardware driver starts a polling thread that polls the hardware ( status command ) every ***UPDATEINTERVAL*** seconds ( 2 in the Release version) and updates the internal data structures. When a client requests a port value or status the hardware driver responds with the value stored in the data structure. When a client wants to update a switch the command is directly forwarded to the hardware.  
 So in short *Read* operations are asynchronous and *Write* oprations are synchronous.  
-The server maintains a list of clients and shuts down once all clients have disconnected.
+The server maintains a list of clients and shuts down once all clients have disconnected.  
+You can now configure the PWM ports into 4 modes:
+- 0: normal PWM mode
+- 1: on/off mode this requires a connect/deconnect in N.i.n.a. for the UI to update
+- 2: dew heater mode, when the ambient temperature dips under the dewpoint the associated port will turn on to a preset value
+- 3: temperature control, this requires an additional temperature probe for the dew heater and will control the port according to a PID algorithm to set the temperature to dewpoint + configurable offset
+
 
 # Installing the driver 
 Downlad the installer from the [realeases](https://github.com/MichelMoriniaux/BigPowerBox/releases) tab and run it, it should register the server and make the driver available in the ASCOM choser. 

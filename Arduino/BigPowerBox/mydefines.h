@@ -26,6 +26,9 @@
 #define OLDCONFIGFLAG       0             // currentdata set this when eeprom structure is no longer in use
 #define PWMMIN              0
 #define PWMMAX              255
+#define KP                  7.0F
+#define KI                  0.3F
+#define KD                  0.0F
 // port states bitmap
 #define ALLOFF              0             // 00000000 ALL OFF
 #define ALLON               255           // 11111111 ALL ON
@@ -33,7 +36,7 @@
 //-----------------------------------------------------------------------
 // DEBUGGING
 //-----------------------------------------------------------------------
-#define DEBUG 1
+//#define DEBUG 1
 #ifdef DEBUG
 #define DPRINT(...) Serial.print(__VA_ARGS__)
 #define DPRINTLN(...) Serial.println(__VA_ARGS__)

@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -75,6 +76,9 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
         private const short INPUTV = 6;                 // Input Voltage port type (sensor)
         private const short TEMP = 7;                   // Temperature port type (sensor)
         private const short HUMID = 8;                  // Humidity port type (sensor)
+        private const short DEWPOINT = 9;               // Dewpoint (sensor)
+        private const short MODE = 10;                  // PWM port mode switch
+        private const short SETTEMP = 11;               // PWM port temperature offset switch
         private const int UPDATEINTERVAL = 2000;        // how often to update the status
 
         class Feature_c
@@ -91,7 +95,8 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
             public string name;
         };                                              // internal status of a port class
         private static List<Feature_c> deviceFeatures;  // list of ports to store their status
-        private static int portNum;                     // number of ports excluding temp and humid sensors
+        private static int portNum;                     // number of physical electrical ports
+        private static bool havePWM = false;            // do we have PWM ports in the port list
         public class fakePort_c
         {
             public int index { get; set; }
@@ -304,7 +309,7 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                 }
                 catch (Exception e)
                 {
-                    tl.LogMessage("SH.CommandString", "Exception: " + e.Message);
+                    tl.LogMessage("SH.CommandString", "Exception: " + e.Message + " for command " + command);
                     throw e;
                 }
                 tl.LogMessage("SH.CommandString", "Response from device: " + response);
@@ -394,7 +399,8 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                         // we want to connect
                         if (serialConnectionCount == 0)
                         {
-                            // there are no current connections so lets go through full initialization
+                            // there are no current connections and we were never initialized so lets go through full initialization
+                            LogMessage("SH.Connected", "Doing initial Initialization");
                             if (comPort == null)
                             {
                                 comPort = comPortDefault;
@@ -464,6 +470,14 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                             // populate the port names
                             tl.LogMessage("SH.Connected", "Query Port Names");
                             QueryPortNames();
+                            // Query the PWM ports for their options (mode, value, temp offset) also modify the port type if the PWM port is switchable
+                            if (havePWM)
+                            {
+                                tl.LogMessage("SH.Connected", "Query PWM Ports");
+                                QueryPWMPorts();
+                            }
+                            // we are now initialized
+                            tl.LogMessage("SH.Connected", "Initialization done");
 
                             // now that all datastructures have been populated lets allow the worker to run and poll the board
                             workerCanRun = true;
@@ -608,7 +622,7 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                 return;
             }
             if (id < portNum)
-                CommandString(string.Format(">M:{0, 0:D2}:{1}#", id + 1, name), false);
+                CommandString(string.Format(">M:{0, 0:D2}:{1}#", id, name), false);
             deviceFeatures[id].name = name;
             deviceFeatures[id + portNum].name = name + " Current (A)";
             tl.LogMessage("SH.SetSwitchName", $"SetSwitchName({id}) = {name}");
@@ -678,16 +692,16 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
             if (state)
             {
                 if (deviceFeatures[id].type == PWM)
-                    command = string.Format(">W:{0, 0:D2}:255#", id + 1);
+                    command = string.Format(">W:{0, 0:D2}:255#", id);
                 else
-                    command = string.Format(">O:{0, 0:D2}#", id + 1);
+                    command = string.Format(">O:{0, 0:D2}#", id);
             }
             else
             {
                 if (deviceFeatures[id].type == PWM)
-                    command = string.Format(">W:{0, 0:D2}:0#", id + 1);
+                    command = string.Format(">W:{0, 0:D2}:0#", id);
                 else
-                    command = string.Format(">F:{0, 0:D2}#", id + 1);
+                    command = string.Format(">F:{0, 0:D2}#", id);
             }
             // Make it so!
             CommandString(command, false);
@@ -754,31 +768,79 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
         /// <param name="value">The value to be set, between <see cref="MinSwitchValue"/> and <see cref="MaxSwitchValue"/></param>
         internal static void SetSwitchValue(short id, double value)
         {
-            string command;
+            string command = "";
+            tl.LogMessage("SH.SetSwitchValue", $"SetSwitchValue({id}) = {value}");
             Validate("SH.SetSwitchValue", id, value);
             if (!CanWrite(id))
             {
                 tl.LogMessage("SH.SetSwitchValue", $"SetSwitchValue({id}) - Cannot write");
                 throw new ASCOM.MethodNotImplementedException($"SetSwitchValue({id}) - Cannot write");
             }
-            deviceFeatures[id].value = value;
-            if (value > 0)
-            {
-                if (deviceFeatures[id].type == PWM)
-                    command = string.Format(">W:{0, 0:D2}:{1}#", id + 1, value);
-                else
-                    command = string.Format(">O:{0, 0:D2}#", id + 1);
-            }
             else
             {
-                if (deviceFeatures[id].type == PWM)
-                    command = string.Format(">W:{0, 0:D2}:0#", id + 1);
+                deviceFeatures[id].value = value;
+                if (value > 0)
+                {
+                    switch (deviceFeatures[id].type)
+                    {
+                        case PWM:
+                            command = string.Format(">W:{0, 0:D2}:{1}#", id, value);
+                            break;
+                        case MODE:
+                            command = string.Format(">C:{0, 0:D2}:{1}#", deviceFeatures[id].port - 1, value);
+                            // TODO: modify seviceFeatures[id - 1].type
+                            if (value == 1)
+                            {
+                                deviceFeatures[deviceFeatures[id].port - 1].type = SWH;
+                                deviceFeatures[deviceFeatures[id].port - 1].maxvalue = 1;
+                            }
+                            else
+                            {
+                                if (deviceFeatures[deviceFeatures[id].port - 1].value == 1)
+                                {
+                                    deviceFeatures[deviceFeatures[id].port - 1].type = PWM;
+                                    deviceFeatures[deviceFeatures[id].port - 1].maxvalue = 255;
+                                    deviceFeatures[deviceFeatures[id].port - 1].value = 255;
+                                }
+                            }
+                            break;
+                        case SETTEMP:
+                            command = string.Format(">T:{0, 0:D2}:{1}#", deviceFeatures[id].port - 1, value);
+                            break;
+                        case SWH:
+                        case MPX:
+                        default:
+                            command = string.Format(">O:{0, 0:D2}#", id);
+                            break;
+                    }
+                }
                 else
-                    command = string.Format(">F:{0, 0:D2}#", id + 1);
+                {
+                    switch (deviceFeatures[id].type)
+                    {
+                        case PWM:
+                            command = string.Format(">W:{0, 0:D2}:0#", id);
+                            break;
+                        case MODE:
+                            command = string.Format(">C:{0, 0:D2}:{1}#", deviceFeatures[id].port - 1, value);
+                            deviceFeatures[deviceFeatures[id].port - 1].type = PWM;
+                            deviceFeatures[deviceFeatures[id].port - 1].maxvalue = 255;
+                            break;
+                        case SETTEMP:
+                            command = string.Format(">T:{0, 0:D2}:{1}#", deviceFeatures[id].port - 1, value);
+                            break;
+                        case SWH:
+                        case MPX:
+                        default:
+                            command = string.Format(">F:{0, 0:D2}#", id);
+                            break;
+                    }
+                }
+                // Make it so!
+                CommandString(command, false);
+                tl.LogMessage("SH.SetSwitchValue", $"SetSwitchValue({id}) = {value} - {command} done");
+
             }
-            // Make it so!
-            CommandString(command, false);
-            tl.LogMessage("SH.SetSwitchValue", $"SetSwitchValue({id}) = {value} - {command}");
         }
 
         #endregion
@@ -908,6 +970,45 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
         }
 
         /// <summary>
+        /// Queries the device PWM ports and updates the driver's internal datastructures
+        /// </summary>
+        /// TODO: completely redo this method as it is not aligned with the rest
+        private static void QueryPWMPorts()
+        {
+            string response = "";
+            string[] words;
+            for ( int i = 0; i < numSwitch; i++)
+            {
+                if (deviceFeatures[i].type == MODE)
+                {
+                    response = CommandString(string.Format(">G:{0, 0:D2}#", deviceFeatures[i].port - 1), false);
+                    words = response.Split(':');
+                    deviceFeatures[i].value = Convert.ToDouble(words[2]);
+                    // if we get a mode 1 then the pwm switch is configured as an on/off switch
+                    if (deviceFeatures[i].value == 1)
+                    {
+                        deviceFeatures[deviceFeatures[i].port - 1].type = SWH;
+                        deviceFeatures[deviceFeatures[i].port - 1].maxvalue = 1;
+                    }
+                    deviceFeatures[i].state = true;
+                    deviceFeatures[i].name = deviceFeatures[deviceFeatures[i].port - 1].name + " Mode";
+                    tl.LogMessage("SH.QueryPWMPorts", "switch " + i + " mode " + deviceFeatures[i].value);
+                }
+                // temperature offset
+                if (deviceFeatures[i].type == SETTEMP)
+                {
+                    response = CommandString(string.Format(">H:{0, 0:D2}#", deviceFeatures[i].port - 1), false);
+                    words = response.Split(':');
+                    deviceFeatures[i].value = Convert.ToDouble(words[2]);
+                    deviceFeatures[i].state = true;
+                    deviceFeatures[i].name = deviceFeatures[deviceFeatures[i].port - 1].name + " Temperature Offset";
+                    tl.LogMessage("SH.QueryPWMPorts", "switch " + i + " offset " + deviceFeatures[i].value);
+                }
+            }
+
+        }
+
+        /// <summary>
         /// Queries the device for a status string and updates the driver's internal datastructures
         /// </summary>
         private static void QueryDeviceStatus()
@@ -929,14 +1030,14 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
             {
                 if (words[0] != "S")
                 {
-                    tl.LogMessage("SH.QueryDeviceDescription", "Invalid response from device: " + response);
+                    tl.LogMessage("SH.QueryDeviceStatus", "Invalid response from device: " + response);
                     throw new ASCOM.DriverException("Invalid response from device: " + response);
                 }
                 else
                 {
                     // populate the deviceFeatures List with the status values
                     string switchPortsOnly = BoardSignature.Replace("t", string.Empty);
-                    switchPortsOnly = switchPortsOnly.Replace("h", string.Empty);
+                    switchPortsOnly = switchPortsOnly.Replace("f", string.Empty);
                     // first iterate through the ports to update the port values (OFF/ON/dutycycle level)
                     int index = 1;
                     for (int i = 0; i < switchPortsOnly.Length; i++)
@@ -957,44 +1058,71 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                                 deviceFeatures[i].state = true;
                             deviceFeatures[i].value = Convert.ToDouble(words[index]);
                         }
+                        tl.LogMessage("SH.QueryDeviceStatus", "switch " + i + " value " + deviceFeatures[i].value);
                         index++;
                     }
                     // now iterate through the ports to update the current sensors
                     for (int i = 0; i < switchPortsOnly.Length; i++)
                     {
-                        deviceFeatures[i + switchPortsOnly.Length].state = true;
-                        deviceFeatures[i + switchPortsOnly.Length].value = Convert.ToDouble(words[index]);
+                        int j = i + switchPortsOnly.Length;
+                        deviceFeatures[j].state = true;
+                        deviceFeatures[j].value = Convert.ToDouble(words[index]);
+                        tl.LogMessage("SH.QueryDeviceStatus", "switch " + j + " value " + deviceFeatures[j].value);
                         index++;
                     }
                     // now do the input ports
                     int p = switchPortsOnly.Length * 2;
                     deviceFeatures[p].state = true;
                     deviceFeatures[p].value = Convert.ToDouble(words[index]);
+                    tl.LogMessage("SH.QueryDeviceStatus", "switch " + p + " value " + deviceFeatures[p].value);
                     index++;
                     p++;
                     deviceFeatures[p].state = true;
                     deviceFeatures[p].value = Convert.ToDouble(words[index]);
+                    tl.LogMessage("SH.QueryDeviceStatus", "switch " + p + " value " + deviceFeatures[p].value);
                     index++;
                     p++;
-                    // and finaly the temp and humid sensors if they are present in the board signature
-                    // the board will report 't' and 'h' only if an SHT31 sensor is attached at power-on
-                    if (BoardSignature.Contains("t"))
+                    // now skip the PWM port modes and offsets if they exist
+                    if (havePWM)
                     {
+                        p += (2 * ( BoardSignature.Split('p').Length - 1));
+                        tl.LogMessage("SH.QueryDeviceStatus", "skipped PWM ports");
+
+                    }
+                    // and finaly the temp and humid sensors if they are present in the board signature
+                    // the board will report 'f' and 't' only if an SHT31 or AHT10 sensor is attached at power-on
+                    if (BoardSignature.Contains("f"))
+                    {
+                        // temperature
                         deviceFeatures[p].state = true;
-                        deviceFeatures[p].value = Convert.ToDouble(words[index]);
-                        index++;
+                        deviceFeatures[p].value = Convert.ToDouble(words[index++]);
+                        tl.LogMessage("SH.QueryDeviceStatus", "switch " + p + " value " + deviceFeatures[p].value);
+                        // humidity
+                        deviceFeatures[++p].state = true;
+                        deviceFeatures[p].value = Convert.ToDouble(words[index++]);
+                        tl.LogMessage("SH.QueryDeviceStatus", "switch " + p + " value " + deviceFeatures[p].value);
+                        // dewpoint
+                        deviceFeatures[++p].state = true;
+                        deviceFeatures[p].value = Convert.ToDouble(words[index++]);
+                        tl.LogMessage("SH.QueryDeviceStatus", "switch " + p + " value " + deviceFeatures[p].value);
                         p++;
                     }
-                    if (BoardSignature.Contains("h"))
+                    if (BoardSignature.Contains("t"))
                     {
-                        deviceFeatures[p].state = true;
-                        deviceFeatures[p].value = Convert.ToDouble(words[index]);
+                        int i = BoardSignature.IndexOf('t');
+                        while (BoardSignature.IndexOf("t", i++) != -1)
+                        {
+                            deviceFeatures[p].state = true;
+                            deviceFeatures[p].value = Convert.ToDouble(words[index++]);
+                            tl.LogMessage("SH.QueryDeviceStatus", "switch " + p + " value " + deviceFeatures[p].value);
+                            p++;
+                        }
                     }
                 }
             }
             else
             {
-                tl.LogMessage("SH.QueryDeviceDescription", "Invalid response from device: " + response);
+                tl.LogMessage("SH.QueryDeviceStatus", "Invalid response from device: " + response);
                 throw new ASCOM.DriverException("Invalid response from device: " + response);
             }
         }
@@ -1010,7 +1138,7 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
             string response = CommandString(GETDESCRIPTION, false);
             tl.LogMessage("SH.QueryDeviceDescription", "Response from device: " + response);
             // response should be of the form:
-            // D:BigPowerBox:001:mmmmmmmmppppaath
+            // D:BigPowerBox:001:mmmmmmmmppppaatffff
             string[] words = response.Split(':');
             if (words.Length > 0)
             {
@@ -1035,11 +1163,15 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
             // so in order: port statuses, port currents, input A, input V, Temp, Hunidity
             // first create a new string without temps and humid
             string portsonly = BoardSignature.Replace("t", string.Empty);
-            portsonly = portsonly.Replace("h", string.Empty);
+            portsonly = portsonly.Replace("f", string.Empty);
             portNum = portsonly.Length;
+            tl.LogMessage("SH.QueryDeviceDescription", "got portsOnly: " + portsonly);
             int switchable = 1;
             int pwm = 1;
             int ao = 1;
+            int portindex = 0;  // for logging purposes only
+            havePWM = false;
+            deviceFeatures.Clear();
             for (int i = 0; i < portNum; i++)
             {
                 // create all ports as status = false (off), they will be updated later by QueryDeviceStatus()
@@ -1059,6 +1191,7 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                         feature.description = "Switchable Port " + switchable++;
                         feature.name = "port " + (i + 1);
                         deviceFeatures.Add(feature);
+                        tl.LogMessage("SH.QueryDeviceDescription", "Added SWH port at index: " + portindex++);
                         break;
                     case 'm':
                         // multiplexed switch port, is RW bool
@@ -1073,6 +1206,7 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                         feature.description = "Switchable Port " + switchable++;
                         feature.name = "port " + (i + 1);
                         deviceFeatures.Add(feature);
+                        tl.LogMessage("SH.QueryDeviceDescription", "Added MPX port at index: " + portindex++);
                         break;
                     case 'p':
                         // pwm switch port, is RW analog
@@ -1084,12 +1218,15 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                         feature.minvalue = 0;
                         feature.maxvalue = 255;
                         feature.unit = null;
-                        feature.description = "PWM Port " + pwm++;
-                        feature.name = "port " + (i + 1);
+                        feature.description = "PWM Port " + pwm;
+                        feature.name = "PWM port " + pwm;
                         deviceFeatures.Add(feature);
+                        tl.LogMessage("SH.QueryDeviceDescription", "Added PWM port at index: " + portindex++);
+                        havePWM = true;
                         break;
                     case 'a':
-                        // Allways-On port, is RO analog
+                        // Allways-On port, is RO analog 
+                        // do we really need this?
                         feature.canWrite = false;
                         feature.state = false;
                         feature.type = AON;
@@ -1099,8 +1236,9 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                         feature.maxvalue = 1;
                         feature.unit = null;
                         feature.description = "Always-On Port " + ao++;
-                        feature.name = "port " + (i + 1);
+                        feature.name = "AO port " + (i + 1);
                         deviceFeatures.Add(feature);
+                        tl.LogMessage("SH.QueryDeviceDescription", "Added AON port at index: " + portindex++);
                         break;
                 }
             }
@@ -1119,6 +1257,7 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                 feature.description = "Output Current Sensor";
                 feature.name = "port " + (i + 1) + " Amps";
                 deviceFeatures.Add(feature);
+                tl.LogMessage("SH.QueryDeviceDescription", "Added CURRENT port at index: " + portindex++);
             }
             // now create "port" for the input current sensor
             {
@@ -1134,6 +1273,7 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                 feature.description = "Input Current Sensor";
                 feature.name = "Input Amps";
                 deviceFeatures.Add(feature);
+                tl.LogMessage("SH.QueryDeviceDescription", "Added INPUT CURRENT port at index: " + portindex++);
             }
             // now create "port" for the input voltage sensor
             {
@@ -1149,9 +1289,46 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                 feature.description = "Input Voltage Sensor";
                 feature.name = "Input Volts";
                 deviceFeatures.Add(feature);
+                tl.LogMessage("SH.QueryDeviceDescription", "Added INPUT VOLT port at index: " + portindex++);
+            }
+            // if we have PWM ports lets add the mode and offset selectors
+            if (havePWM)
+            {
+                pwm = 1;
+                int firstPWMPortIndex = portsonly.IndexOf("p");
+                while (portsonly.IndexOf("p", firstPWMPortIndex) != -1)
+                {
+                    Feature_c feature2 = new Feature_c();
+                    feature2.canWrite = true;
+                    feature2.state = false;
+                    feature2.type = MODE;
+                    feature2.port = firstPWMPortIndex + 1;
+                    feature2.value = 0;
+                    feature2.minvalue = 0;
+                    feature2.maxvalue = 3;
+                    feature2.unit = null;
+                    feature2.description = "PWM Port " + pwm + " Mode (0: variable, 1: on/off, 2:Dewheater, 3:temperature PID";
+                    feature2.name = "PWM Port " + pwm + " Mode";
+                    deviceFeatures.Add(feature2);
+                    tl.LogMessage("SH.QueryDeviceDescription", "Added MODE port at index: " + portindex++);
+                    Feature_c feature3 = new Feature_c();
+                    feature3.canWrite = true;
+                    feature3.state = false;
+                    feature3.type = SETTEMP;
+                    feature3.port = firstPWMPortIndex + 1;
+                    feature3.value = 0;
+                    feature3.minvalue = 0;
+                    feature3.maxvalue = 10;
+                    feature3.unit = null;
+                    feature3.description = "PWM Port " + pwm + " Temp Offset";
+                    feature3.name = "PWM Port " + pwm++ + " Offset";
+                    deviceFeatures.Add(feature3);
+                    tl.LogMessage("SH.QueryDeviceDescription", "Added SETTEMP port at index: " + portindex++);
+                    firstPWMPortIndex++;
+                }
             }
             // now lets add "ports" for the temp and humidity sensors if they are present
-            if (BoardSignature.Contains("t"))
+            if (BoardSignature.Contains("f"))
             {
                 Feature_c feature = new Feature_c();
                 feature.canWrite = false;
@@ -1162,27 +1339,61 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                 feature.minvalue = -100.00;
                 feature.maxvalue = 200.00;
                 feature.unit = "C";
-                feature.description = "Temperature Sensor";
-                feature.name = "Temperature";
+                feature.description = "Environment Temperature Sensor";
+                feature.name = "Env Temperature";
                 deviceFeatures.Add(feature);
+                tl.LogMessage("SH.QueryDeviceDescription", "Added ENV TEMP port at index: " + portindex++);
+                Feature_c feature2 = new Feature_c();
+                feature2.canWrite = false;
+                feature2.state = true;
+                feature2.type = HUMID;
+                feature2.port = portNum + 4;
+                feature2.value = 0;
+                feature2.minvalue = 0;
+                feature2.maxvalue = 100;
+                feature2.unit = "%";
+                feature2.description = "Environment Humidity Sensor";
+                feature2.name = "Env Humidity";
+                deviceFeatures.Add(feature2);
+                tl.LogMessage("SH.QueryDeviceDescription", "Added ENV HUMID port at index: " + portindex++);
+                Feature_c feature3 = new Feature_c();
+                feature3.canWrite = false;
+                feature3.state = true;
+                feature3.type = DEWPOINT;
+                feature3.port = portNum + 5;
+                feature3.value = 0;
+                feature3.minvalue = -100;
+                feature3.maxvalue = 200;
+                feature3.unit = "C";
+                feature3.description = "Environment Dewpoint";
+                feature3.name = "Env dewpoint";
+                deviceFeatures.Add(feature3);
+                tl.LogMessage("SH.QueryDeviceDescription", "Added ENV DEW port at index: " + portindex++);
             }
-            if (BoardSignature.Contains("h"))
+            if (BoardSignature.Contains("t"))
             {
-                Feature_c feature = new Feature_c();
-                feature.canWrite = false;
-                feature.state = true;
-                feature.type = HUMID;
-                feature.port = portNum + 4;
-                feature.value = 0;
-                feature.minvalue = 0;
-                feature.maxvalue = 100;
-                feature.unit = "%";
-                feature.description = "Humidity Sensor";
-                feature.name = "Humidity";
-                deviceFeatures.Add(feature);
+                int port = 1;
+                int i = BoardSignature.IndexOf('t');
+                while (BoardSignature.IndexOf("t", i++) != -1)
+                {
+                    Feature_c feature = new Feature_c();
+                    feature.canWrite = false;
+                    feature.state = true;
+                    feature.type = TEMP;
+                    feature.port = port;
+                    feature.value = 0;
+                    feature.minvalue = -100.00;
+                    feature.maxvalue = 200.00;
+                    feature.unit = "C";
+                    feature.description = "Temperature Sensor for PWM port " + port;
+                    feature.name = "Temperature " + port++;
+                    deviceFeatures.Add(feature);
+                    tl.LogMessage("SH.QueryDeviceDescription", "Added TEMP port at index: " + portindex++);
+                }
             }
             // the number of "switches" we want the client to display in the UI ( relates to MaxSwitches )
             numSwitch = (short)deviceFeatures.Count;
+            tl.LogMessage("SH.QueryDeviceDescription", "Total number of ports found: " + numSwitch);
         }
 
         /// <summary>
@@ -1207,7 +1418,7 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                     }
                     else
                         newid = id;
-                    string response = CommandString(string.Format(">N:{0, 0:D2}#", newid + 1), false);
+                    string response = CommandString(string.Format(">N:{0, 0:D2}#", newid), false);
                     deviceFeatures[id].name = response.Split(':')[2] + suffix;
                 }
                 tl.LogMessage("SH.QueryPortNames", $"QueryPortNames({id}) - {deviceFeatures[id].name}");

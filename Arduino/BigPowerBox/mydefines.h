@@ -14,6 +14,7 @@
 //-----------------------------------------------------------------------
 #define MAXINVOLTS          14.4          // maximum allowed volts In, shutdown all output ports if exceeded
 #define REFRESH             200           // read port values every REFRESH milliseconds
+#define TEMPITVL            1             // adjust dew heaters every TEMPITVL minutes
 #define SERIALPORTSPEED     9600          // 9600, 14400, 19200, 28800, 38400, 57600
 #define QUEUELENGTH         5             // number of commands that can be saved in the serial queue
 #define MAXCOMMAND          21            // max length of a command
@@ -25,6 +26,9 @@
 #define OLDCONFIGFLAG       0             // currentdata set this when eeprom structure is no longer in use
 #define PWMMIN              0
 #define PWMMAX              255
+#define KP                  7.0F
+#define KI                  0.3F
+#define KD                  0.0F
 // port states bitmap
 #define ALLOFF              0             // 00000000 ALL OFF
 #define ALLON               255           // 11111111 ALL ON

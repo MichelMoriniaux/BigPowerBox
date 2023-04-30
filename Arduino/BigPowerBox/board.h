@@ -14,12 +14,15 @@
 //  m: multiplexed switchable port
 //  p: pwm port
 //  a: Allways-On port
+// the following are optional and only appear if they are plugged into the device
 //  t: temperature probe
 //  h: humidity probe
+//  f: temp + humidity probe
 // always-on ports always last followed by t then h
-const String boardSignature = "mmmmmmmmppppaath";
-// 0:0:0:0:0:0:0:0:127:255:195:100:1:1:15.54:15.49:15.42:15.37:15.44:15.49:15.54:15.49:15.39:15.49:15.44:15.37:10.22:10.23:10.07:13.37:-10.00:100.00
-#define STATUSSIZE      145             // size of thebuffer to hold the status line
+String boardSignature = "mmmmmmmmppppaa";
+// status string
+// 0:0:0:0:0:0:0:0:127:255:195:100:1:1:15.54:15.49:15.42:15.37:15.44:15.49:15.54:15.49:15.39:15.49:15.44:15.37:10.22:10.23:10.07:13.37:-10.00:100.00:-10.00
+#define STATUSSIZE      200             // size of thebuffer to hold the status line
 
 //-----------------------------------------------------------------------
 // EEPROM structures
@@ -39,10 +42,8 @@ const String boardSignature = "mmmmmmmmppppaath";
 // there are 2 types of config values we want to store in EEPROM
 // the first struct is rarely modified so it will live in the first 224 bytes of the EEPROM
 // we believe that these will be seldom modified so we can live with the 100k writes 
-// limitation of the EEPROM :
+// limitation of the EEPROM
 // Configuration struct to store long lived configs in EEPROM
-// IMPROVE: do a dynamic declaration of this struct by using BoardSignature and making portName an array
-// char portNames[14][NAMELENGTH];
 
 // The second struct will be modified at each change of a port status so might happen a couple
 // times per session. This struct will use the remaining EEPROM space and be written at a
@@ -54,15 +55,22 @@ const String boardSignature = "mmmmmmmmppppaath";
 struct config_t {
   byte  currentData;                      // if this is CURRENTCONFIGFLAG then data is valid
   byte  portStatus;                       // bitmap of all port statuses (0: Off, 1: On)
-  byte  pwmPorts[4];                      // pwm value of ports 9-12
+  byte  pwmPorts[4];                      // pwm value of ports 9-12 (0: Off, 255: On or 1: On if port in 's' mode)
+  byte  pwmPortMode[4];                   // operation mode of the PWM ports (enum PWMModes)
+  byte  pwmPortPreset[4];                 // last max value of the port, allows to store a preset
+  byte  pwmPortTempOffset[4];             // adjustable temperature offset for the PWM port in mode 3
 };
 
 struct status_t {
-    float portAmps[14];
+    float portAmps[14];                   // size of array must be equal to boardSignature.length() this holds the current for each port
     float inputAmps;
     float inputVolts;
     float temp;
     float humid;
+    float dewpoint;
+    float tempProbe[5];                   // tempearture reading in C.
+    byte  tempProbePort[5];               // i2c muc port on which the probe is found, 255 is used for non mux.
+    byte  tempProbeType[5];               // type of probe found. limit them to 5 more would be overkill, like 640k RAM
 };
 
 //-----------------------------------------------------------------------
@@ -137,7 +145,12 @@ const byte ports2Pin[12] = {PORT1EN, PORT2EN, PORT3EN, PORT4EN, PORT5EN, PORT6EN
 #define PORT8ON             128           // 10000000 128
 const byte port2bin[8] = {PORT1ON, PORT2ON, PORT3ON, PORT4ON, PORT5ON, PORT6ON, PORT7ON, PORT8ON};
 
+// temperature / Humidity Probe Ids
+#define SHT31_0x44          1
+#define SHT31_0x45          2
+#define AHT10               3 
 
+// Storage management
 #define EEPROMNAMEBASE      0             // Base address of the port name config struct in EEPROM
 #define EEPROMCONFBASE      224           // base address of the config struct in EEPROM
 

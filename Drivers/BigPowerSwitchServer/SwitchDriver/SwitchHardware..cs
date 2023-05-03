@@ -1219,7 +1219,7 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                         feature.maxvalue = 255;
                         feature.unit = null;
                         feature.description = "PWM Port " + pwm;
-                        feature.name = "PWM port " + pwm;
+                        feature.name = "PWM port " + pwm++;
                         deviceFeatures.Add(feature);
                         tl.LogMessage("SH.QueryDeviceDescription", "Added PWM port at index: " + portindex++);
                         havePWM = true;

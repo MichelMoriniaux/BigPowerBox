@@ -12,7 +12,7 @@
 //-----------------------------------------------------------------------
 // Constant Definitions
 //-----------------------------------------------------------------------
-#define MAXINVOLTS          14.4          // maximum allowed volts In, shutdown all output ports if exceeded
+#define MAXINVOLTS          14.7          // maximum allowed volts In, shutdown all output ports if exceeded
 #define REFRESH             200           // read port values every REFRESH milliseconds
 #define TEMPITVL            1             // adjust dew heaters every TEMPITVL minutes
 #define SERIALPORTSPEED     9600          // 9600, 14400, 19200, 28800, 38400, 57600

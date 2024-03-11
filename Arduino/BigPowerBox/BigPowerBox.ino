@@ -214,8 +214,7 @@ void serialEvent() {
     }
   }
 }
-// 21 total, 16 chars name M:13:telescope 12 45\0
-// M:13:ta belle suce des bites au bois de boulogne au fond des bois #
+
 
 // SERIAL COMMS
 void sendPacket(const String &str) {

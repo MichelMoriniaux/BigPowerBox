@@ -456,14 +456,14 @@ void adjustDewHeaters() {
   pwmPortNum = sizeof(powerBoxConf.pwmPorts);
   for ( int port=0; port < pwmPortNum ; port++) {
     if ( powerBoxConf.pwmPortMode[port] == dewHeater ) {
-      if ( powerBoxStatus.temp < powerBoxStatus.dewpoint ) {
+      if (powerBoxStatus.temp < powerBoxStatus.dewpoint + powerBoxConf.pwmPortTempOffset[port]) {
         setDewPortLevel(port, int(powerBoxConf.pwmPortPreset[port]));
       } else if ( powerBoxStatus.temp > powerBoxStatus.dewpoint + powerBoxConf.pwmPortTempOffset[port]) {
         setDewPortLevel(port, PWMMIN);;
       }
     }
     if ( powerBoxConf.pwmPortMode[port] == tempFeedback ) {
-      if ( powerBoxStatus.tempProbe[port] < powerBoxStatus.dewpoint ) {
+      if ( powerBoxStatus.tempProbe[port] < powerBoxStatus.dewpoint + powerBoxConf.pwmPortTempOffset[port]) {
         pid[port].setpoint(powerBoxStatus.dewpoint + powerBoxConf.pwmPortTempOffset[port]);
         level = int(pid[port].compute(powerBoxStatus.tempProbe[port]));
         DPRINT(F("tempfeedbck set port "));

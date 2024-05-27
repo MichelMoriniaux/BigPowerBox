@@ -381,7 +381,7 @@ void setPWMPortLevel(int port, int level) {
   if ( boardSignature[port] == 'p' ) {
     // PWM on/off port
     if (powerBoxConf.pwmPorts[port - boardSignature.indexOf("p")] != level) {
-      analogWrite(ports2Pin[port - 1], level);
+      analogWrite(ports2Pin[port], level);
       powerBoxConf.pwmPorts[port - boardSignature.indexOf("p")] = level;
     }
     // we may have made a change so write the config to EEPROM
@@ -395,7 +395,7 @@ void setDewPortLevel(int port, int level) {
   if ( boardSignature[port] == 'p' ) {
     // PWM on/off port
     if (powerBoxConf.pwmPorts[port - boardSignature.indexOf("p")] != level) {
-      analogWrite(ports2Pin[port - 1], level);
+      analogWrite(ports2Pin[port], level);
       powerBoxConf.pwmPorts[port - boardSignature.indexOf("p")] = level;
     }
   }

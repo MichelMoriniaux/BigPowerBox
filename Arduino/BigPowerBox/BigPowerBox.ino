@@ -392,13 +392,10 @@ void setPWMPortLevel(int port, int level) {
 
 // same function but don't write the EEPROM
 void setDewPortLevel(int port, int level) {
-  if ( boardSignature[port] == 'p' ) {
     // PWM on/off port
-    if (powerBoxConf.pwmPorts[port - boardSignature.indexOf("p")] != level) {
+    if ( boardSignature[port] == 'p' ) {
       analogWrite(ports2Pin[port], level);
-      powerBoxConf.pwmPorts[port - boardSignature.indexOf("p")] = level;
-    }
-  }
+	} 
 }
 
 
@@ -454,18 +451,27 @@ void adjustDewHeaters() {
   int level;
 
   pwmPortNum = sizeof(powerBoxConf.pwmPorts);
-  for ( int port=0; port < pwmPortNum ; port++) {
-    if ( powerBoxConf.pwmPortMode[port] == dewHeater ) {
-      if (powerBoxStatus.temp < powerBoxStatus.dewpoint + powerBoxConf.pwmPortTempOffset[port]) {
-        setDewPortLevel(port, int(powerBoxConf.pwmPortPreset[port]));
-      } else if ( powerBoxStatus.temp > powerBoxStatus.dewpoint + powerBoxConf.pwmPortTempOffset[port]) {
+  // PWM ports start at boardSignature.indexOf("p")
+  //
+  for ( int port=boardSignature.indexOf("p"); port < pwmPortNum + boardSignature.indexOf("p"); port++) {
+
+    // Zero based index for probes 
+    //
+    int index = port - boardSignature.indexOf("p");
+    if ( powerBoxConf.pwmPortMode[index] == dewHeater ) {
+      if (powerBoxStatus.temp < powerBoxStatus.dewpoint + powerBoxConf.pwmPortTempOffset[index]) {
+        // As of now powerBoxConf.pwmPortPreset is not being initialized anywhere. Use powerBoxConf.pwmPorts for now 
+        // TBD: do something meaningful with powerBoxConf.pwmPortPreset
+        //
+        setDewPortLevel(port, int(powerBoxConf.pwmPorts[index]));
+      } else if ( powerBoxStatus.temp > powerBoxStatus.dewpoint + powerBoxConf.pwmPortTempOffset[index]) {
         setDewPortLevel(port, PWMMIN);;
       }
     }
-    if ( powerBoxConf.pwmPortMode[port] == tempFeedback ) {
-      if ( powerBoxStatus.tempProbe[port] < powerBoxStatus.dewpoint + powerBoxConf.pwmPortTempOffset[port]) {
-        pid[port].setpoint(powerBoxStatus.dewpoint + powerBoxConf.pwmPortTempOffset[port]);
-        level = int(pid[port].compute(powerBoxStatus.tempProbe[port]));
+    if ( powerBoxConf.pwmPortMode[index] == tempFeedback ) {
+      if ( powerBoxStatus.tempProbe[index] < powerBoxStatus.dewpoint + powerBoxConf.pwmPortTempOffset[index]) {
+        pid[port- boardSignature.indexOf("p")].setpoint(powerBoxStatus.dewpoint + powerBoxConf.pwmPortTempOffset[index]);
+        level = int(pid[index].compute(powerBoxStatus.tempProbe[index]));
         DPRINT(F("tempfeedbck set port "));
         DPRINT(port);
         DPRINT(F(" power: "));

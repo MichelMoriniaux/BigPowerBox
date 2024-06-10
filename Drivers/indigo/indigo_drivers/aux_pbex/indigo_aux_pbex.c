@@ -43,9 +43,9 @@
 
 #include "indigo_aux_pbex.h"
 
-/// <summary>
+
 ///  some basic commands to interact with the switch
-/// </summary>
+
 char *SOC = ">";				 // Start of Command marker
 char *EOC = "#";				 // End of Command marker
 char *PINGCOMMAND = ">P#";		 // ping command
@@ -53,9 +53,9 @@ char *PINGREPLY = ">POK#";		 // ping reply
 char *GETSTATUS = ">S#";		 // status request command
 char *GETDESCRIPTION = ">D#";	 // board description request command
 static char BoardSignature[128]; // string to store the board geometry
-static char deviceName[128];	 // the device name stored on the board
-static char hwRevision[128];	 // the HW revision sotred on the board
-static char portsonly[128];
+static char deviceName[50];	 // the device name stored on the board
+static char hwRevision[10];	 // the HW revision sotred on the board
+static char portsonly[50];
 #define SWH 0				// switched port type
 #define MPX 1				// Multiplexed port type
 #define PWM 2				// PWM port type
@@ -72,38 +72,38 @@ static char portsonly[128];
 
 #define PRIVATE_DATA ((pbex_private_data *)device->private_data)
 
-#define AUX_OUTLET_NAMES_PROPERTY (PRIVATE_DATA->outlet_names_property)
-#define AUX_POWER_OUTLET_NAME_1 (AUX_OUTLET_NAMES_PROPERTY->items + 0)
-#define AUX_POWER_OUTLET_NAME_2 (AUX_OUTLET_NAMES_PROPERTY->items + 1)
-#define AUX_POWER_OUTLET_NAME_3 (AUX_OUTLET_NAMES_PROPERTY->items + 2)
-#define AUX_POWER_OUTLET_NAME_4 (AUX_OUTLET_NAMES_PROPERTY->items + 3)
-#define AUX_POWER_OUTLET_NAME_5 (AUX_OUTLET_NAMES_PROPERTY->items + 4)
-#define AUX_POWER_OUTLET_NAME_6 (AUX_OUTLET_NAMES_PROPERTY->items + 5)
-#define AUX_POWER_OUTLET_NAME_7 (AUX_OUTLET_NAMES_PROPERTY->items + 6)
-#define AUX_POWER_OUTLET_NAME_8 (AUX_OUTLET_NAMES_PROPERTY->items + 7)
-#define AUX_POWER_OUTLET_NAME_9 (AUX_OUTLET_NAMES_PROPERTY->items + 8)
-#define AUX_POWER_OUTLET_NAME_10 (AUX_OUTLET_NAMES_PROPERTY->items + 9)
-#define AUX_POWER_OUTLET_NAME_11 (AUX_OUTLET_NAMES_PROPERTY->items + 10)
-#define AUX_POWER_OUTLET_NAME_12 (AUX_OUTLET_NAMES_PROPERTY->items + 11)
-#define AUX_POWER_OUTLET_NAME_13 (AUX_OUTLET_NAMES_PROPERTY->items + 12)
-#define AUX_POWER_OUTLET_NAME_14 (AUX_OUTLET_NAMES_PROPERTY->items + 13)
+#define AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY (PRIVATE_DATA->outlet_names_property)
+#define AUX_SWITCH_POWER_OUTLET_NAME_ITEM_1 (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + 0)
+#define AUX_SWITCH_POWER_OUTLET_NAME_ITEM_2 (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + 1)
+#define AUX_SWITCH_POWER_OUTLET_NAME_ITEM_3 (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + 2)
+#define AUX_SWITCH_POWER_OUTLET_NAME_ITEM_4 (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + 3)
+#define AUX_SWITCH_POWER_OUTLET_NAME_ITEM_5 (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + 4)
+#define AUX_SWITCH_POWER_OUTLET_NAME_ITEM_6 (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + 5)
+#define AUX_SWITCH_POWER_OUTLET_NAME_ITEM_7 (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + 6)
+#define AUX_SWITCH_POWER_OUTLET_NAME_ITEM_8 (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + 7)
+#define AUX_SWITCH_POWER_OUTLET_NAME_ITEM_9 (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + 8)
+#define AUX_SWITCH_POWER_OUTLET_NAME_ITEM_10 (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + 9)
+#define AUX_SWITCH_POWER_OUTLET_NAME_ITEM_11 (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + 10)
+#define AUX_SWITCH_POWER_OUTLET_NAME_ITEM_12 (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + 11)
+#define AUX_SWITCH_POWER_OUTLET_NAME_ITEM_13 (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + 12)
+#define AUX_SWITCH_POWER_OUTLET_NAME_ITEM_14 (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + 13)
 
-#define AUX_POWER_OUTLET_PROPERTY (PRIVATE_DATA->power_outlet_property)
+#define AUX_SWITCH_POWER_OUTLETS_PROPERTY (PRIVATE_DATA->power_outlet_property)
 
-#define X_AUX_VARIABLE_POWER_OUTLET_PROPERTY (PRIVATE_DATA->variable_power_outlet_property)
-#define PWM_CONFIGURATION_PROPERTY (PRIVATE_DATA->pwm_configuration_property)
-#define PWM_CONFIGURATION_ITEM_1				(PWM_CONFIGURATION_PROPERTY->items + 0)
-#define PWM_CONFIGURATION_ITEM_2				(PWM_CONFIGURATION_PROPERTY->items + 1)
-#define PWM_CONFIGURATION_ITEM_3				(PWM_CONFIGURATION_PROPERTY->items + 2)
-#define PWM_CONFIGURATION_ITEM_4				(PWM_CONFIGURATION_PROPERTY->items + 3)
+#define AUX_PWM_POWER_OUTLETS_PROPERTY (PRIVATE_DATA->variable_power_outlet_property)
+#define AUX_PWM_MODES_PROPERTY (PRIVATE_DATA->pwm_configuration_property)
+#define AUX_PWM_MODE_ITEM_1				(AUX_PWM_MODES_PROPERTY->items + 0)
+#define AUX_PWM_MODE_ITEM_2				(AUX_PWM_MODES_PROPERTY->items + 1)
+#define AUX_PWM_MODE_ITEM_3				(AUX_PWM_MODES_PROPERTY->items + 2)
+#define AUX_PWM_MODE_ITEM_4				(AUX_PWM_MODES_PROPERTY->items + 3)
 
-#define PWM_TEMP_OFFSET_PROPERTY (PRIVATE_DATA->pwm_temperature_offset_property)
-#define PWM_TEMP_OFFSET_ITEM_1					(PWM_TEMP_OFFSET_PROPERTY->items + 0)
-#define PWM_TEMP_OFFSET_ITEM_2					(PWM_TEMP_OFFSET_PROPERTY->items + 1)
-#define PWM_TEMP_OFFSET_ITEM_3					(PWM_TEMP_OFFSET_PROPERTY->items + 2)
-#define PWM_TEMP_OFFSET_ITEM_4					(PWM_TEMP_OFFSET_PROPERTY->items + 3)
+#define AUX_PWM_TEMP_OFFSETS_PROPERTY (PRIVATE_DATA->pwm_temperature_offset_property)
+#define AUX_PWM_TEMP_OFFSET_ITEM_1					(AUX_PWM_TEMP_OFFSETS_PROPERTY->items + 0)
+#define AUX_PWM_TEMP_OFFSET_ITEM_2					(AUX_PWM_TEMP_OFFSETS_PROPERTY->items + 1)
+#define AUX_PWM_TEMP_OFFSET_ITEM_3					(AUX_PWM_TEMP_OFFSETS_PROPERTY->items + 2)
+#define AUX_PWM_TEMP_OFFSET_ITEM_4					(AUX_PWM_TEMP_OFFSETS_PROPERTY->items + 3)
 
-#define PWM_SWITCHES_PROPERTY (PRIVATE_DATA->pwm_switches_property)
+#define AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY (PRIVATE_DATA->pwm_switches_property)
 #define CURRENT_SENSOR_PROPERTY (PRIVATE_DATA->current_sensor_property)
 #define AUX_WEATHER_PROPERTY								(PRIVATE_DATA->weather_property)
 #define AUX_WEATHER_TEMPERATURE_ITEM				(AUX_WEATHER_PROPERTY->items + 0)
@@ -117,9 +117,9 @@ static char portsonly[128];
 
 #define AUX_STATE_PROPERTY								(PRIVATE_DATA->state_property)
 
-#define ALWAYS_ON_PORT_PROPERTY (PRIVATE_DATA->always_on_port_property)
-#define ALWAYS_ON_PORT_ITEM_1					(ALWAYS_ON_PORT_PROPERTY->items + 0)
-#define ALWAYS_ON_PORT_ITEM_2					(ALWAYS_ON_PORT_PROPERTY->items + 1)
+#define AUX_ALWAYS_ON_PORTS_PROPERTY (PRIVATE_DATA->always_on_port_property)
+#define AUX_ALWAYS_ON_PORTITEM_1					(AUX_ALWAYS_ON_PORTS_PROPERTY->items + 0)
+#define AUX_ALWAYS_ON_PORTITEM_2					(AUX_ALWAYS_ON_PORTS_PROPERTY->items + 1)
 
 
 #define AUX_GROUP "Powerbox"
@@ -257,70 +257,70 @@ bool Contains(const char *string, const char *c)
 	return strstr(string, c) != NULL;
 }
 
-/// <summary>
+
 /// Return the name of switch device n.
-/// </summary>
+
 /// <param name="id">The device number (0 to <see cref="MaxSwitch"/> - 1)</param>
 /// <returns>The name of the device</returns>
 char *GetSwitchName(short id)
 {
 	// this method is called by clients like N.i.n.a. every 2s for each port
-	// Validate("SH.GetSwitchName", id);
-	// tl.LogMessage("SH.GetSwitchName", $"GetSwitchName({id}) - {deviceFeatures[id].name}");
+	// ValidateGetSwitchName", id);
+	INDIGO_DRIVER_DEBUG(DRIVER_NAME, "GetSwitchName %s GetSwitchName(%d)", deviceFeatures[id].name, id);
 	return deviceFeatures[id].name;
 }
-/// <summary>
+
 /// Gets the description of the specified switch device. This is to allow a fuller description of
 /// the device to be returned, for example for a tool tip.
-/// </summary>
+
 /// <param name="id">The device number (0 to <see cref="MaxSwitch"/> - 1)</param>
 /// <returns>
 /// String giving the device description.
 /// </returns>
 char *GetSwitchDescription(short id, char *description)
 {
-	// Validate("SH.GetSwitchDescription", id);
-	// tl.LogMessage("SH.GetSwitchDescription", $"GetSwitchDescription({id}) - {deviceFeatures[id].description}");
+	// ValidateGetSwitchDescription", id);
+	INDIGO_DRIVER_DEBUG(DRIVER_NAME,"GetSwitchDescription %s GetSwitchDescription(%d)",deviceFeatures[id].description, id);
 	return description, deviceFeatures[id].description;
 }
-/// <summary>
+
 /// Reports if the specified switch device can be written to, default true.
 /// This is false if the device cannot be written to, for example a limit switch or a sensor.
-/// </summary>
+
 /// <param name="id">The device number (0 to <see cref="MaxSwitch"/> - 1)</param>
 /// <returns>
 /// <c>true</c> if the device can be written to, otherwise <c>false</c>.
 /// </returns>
 bool CanWrite(short id)
 {
-	// Validate("SH.CanWrite", id);
+	// ValidateCanWrite", id);
 	//  default behavour is to report true
-	// tl.LogMessage("SH.CanWrite", $"CanWrite({id}): {deviceFeatures[id].canWrite}");
+	INDIGO_DRIVER_DEBUG(DRIVER_NAME, "CanWrite %d CanWrite(%d)", deviceFeatures[id].canWrite, id);
 	return deviceFeatures[id].canWrite;
 }
 
-/// <summary>
+
 /// Return the state of switch device id as a boolean
-/// </summary>
+
 /// <param name="id">The device number (0 to <see cref="MaxSwitch"/> - 1)</param>
 /// <returns>True or false</returns>
 bool GetSwitch(short id)
 {
-	// Validate("SH.GetSwitch", id);
-	// tl.LogMessage("SH.GetSwitch", $"GetSwitch({id}) - {deviceFeatures[id].state}");
+	// ValidateGetSwitch", id);
+	INDIGO_DRIVER_DEBUG(DRIVER_NAME,"GetSwitch %d GetSwitch(%d)",deviceFeatures[id].state,id);
 	return deviceFeatures[id].state;
 }
 
 void SetSwitch(indigo_device *device, short id, bool state)
 {
 	char command[20] ; // Assuming a maximum length of 20 characters for the command
-	// Validate("SH.SetSwitch", id);
+	// ValidateSetSwitch", id);
 
 	if (!CanWrite(id))
 	{
 		char str[30];
 		snprintf(str, sizeof(str), "SetSwitch(%d) - Cannot Write", id);
-		// LogMessage("SH.SetSwitch", str);
+		// LogMessageSetSwitch", str);
 		//  Assuming MethodNotImplementedException is handled by terminating the program
 		//  You may adjust this part based on your error handling mechanism
 		// exit(EXIT_FAILURE);
@@ -347,21 +347,21 @@ void SetSwitch(indigo_device *device, short id, bool state)
 
 	char logMessage[50];
 	snprintf(logMessage, sizeof(logMessage), "SetSwitch(%d) = %B - %s", id, state, command);
-	// LogMessage("SH.SetSwitch", logMessage);
+	// LogMessageSetSwitch", logMessage);
 }
-/// <summary>
+
 /// Set a switch device name to a specified value.
-/// </summary>
+
 /// <param name="id">The device number (0 to <see cref="MaxSwitch"/> - 1)</param>
 /// <param name="name">The name of the device</param>
 void SetSwitchName(indigo_device *device, short id, char *name)
 {
-	// Validate("SH.SetSwitchName", id);
+	// ValidateSetSwitchName", id);
 	//  ">M:%02d:%s#" return ">MOK#"
 	//  EEPROM dies quick, lets not update it uselessly
 	if (strcmp(deviceFeatures[id].name, name) != 0)
 	{
-		// tl.LogMessage("SH.SetSwitchName", $"SetSwitchName({id}) = {name} not modified");
+		INDIGO_DRIVER_DEBUG(DRIVER_NAME,"SetSwitchName %s SetSwitchName(%d) = %s not modified",name,id,name);
 		return;
 	}
 
@@ -373,48 +373,47 @@ void SetSwitchName(indigo_device *device, short id, char *name)
 
 	strcpy(deviceFeatures[id].name, name);
 	sprintf(deviceFeatures[id + portNum].name, "%s Current (A)", name);
-	// tl.LogMessage("SH.SetSwitchName", $"SetSwitchName({id}) = {name}");
+	INDIGO_DRIVER_DEBUG(DRIVER_NAME,"SetSwitchName SetSwitchName(%d) = %s",id,name);
 }
 
-/// <summary>
+
 /// Returns the step size that this device supports (the difference between successive values of the device).
-/// </summary>
+
 /// <param name="id">The device number (0 to <see cref="MaxSwitch"/> - 1)</param>
 /// <returns>The step size for this device.</returns>
 double SwitchStep(short id)
 {
-	//	Validate("SH.SwitchStep", id);
-	//	tl.LogMessage("SH.SwitchStep", $"SwitchStep({id}) - 1.0");
+	//	ValidateSwitchStep", id);
+	//	INDIGO_DRIVER_DEBUG(DRIVER_NAME,SwitchStep", $"SwitchStep({id}) - 1.0");
 	return 1.0;
 }
 
-/// <summary>
+
 /// Returns the value for switch device id as a double
-/// </summary>
+
 /// <param name="id">The device number (0 to <see cref="MaxSwitch"/> - 1)</param>
 /// <returns>The value for this switch, this is expected to be between <see cref="MinSwitchValue"/> and
 /// <see cref="MaxSwitchValue"/>.</returns>
 double GetSwitchValue(short id)
 {
-	//	Validate("SH.GetSwitchValue", id);
-	//	tl.LogMessage("SH.GetSwitchValue", $"GetSwitchValue({id}) - {deviceFeatures[id].value}");
+	//	ValidateGetSwitchValue", id);
+	//	INDIGO_DRIVER_DEBUG(DRIVER_NAME,GetSwitchValue", $"GetSwitchValue({id}) - {deviceFeatures[id].value}");
 	return deviceFeatures[id].value;
 }
 
-/// <summary>
+
 /// Set the value for this device as a double.
-/// </summary>
+
 /// <param name="id">The device number (0 to <see cref="MaxSwitch"/> - 1)</param>
 /// <param name="value">The value to be set, between <see cref="MinSwitchValue"/> and <see cref="MaxSwitchValue"/></param>
 void SetSwitchValue(indigo_device *device, short id, double value)
 {
 	char command[50];
-	// tl.LogMessage("SH.SetSwitchValue", $"SetSwitchValue({id}) = {value}");
-	// Validate("SH.SetSwitchValue", id, value);
+	INDIGO_DRIVER_DEBUG(DRIVER_NAME,"SetSwitchValue SetSwitchValue(%d) = %f",id,value);
+	// ValidateSetSwitchValue", id, value);
 	if (!CanWrite(id))
 	{
-		// tl.LogMessage("SH.SetSwitchValue", $"SetSwitchValue({id}) - Cannot write");
-		// throw new ASCOM.MethodNotImplementedException($"SetSwitchValue({id}) - Cannot write");
+		INDIGO_DRIVER_ERROR(DRIVER_NAME,"SetSwitchValue(%d) - Cannot write", id);	
 	}
 	else
 	{
@@ -480,7 +479,7 @@ void SetSwitchValue(indigo_device *device, short id, double value)
 		// Make it so!
 		char response[128];
 		pbex_command(device, command, response, sizeof(response));
-		// tl.LogMessage("SH.SetSwitchValue", $"SetSwitchValue({id}) = {value} - {command} done");
+		INDIGO_DRIVER_DEBUG(DRIVER_NAME, "SetSwitchValue(%d) = %f - %s done",id,value,command);
 	}
 }
 
@@ -495,7 +494,7 @@ indigo_result CreateStateItems(indigo_device *device)
 		char name[50];
 		sprintf(name,"AUX_POWER_OUTLET_STATE_%d_ITEM_NAME",i+1);
 		indigo_init_light_item(AUX_STATE_PROPERTY->items + i, 
-		name,(AUX_OUTLET_NAMES_PROPERTY->items + i)->text.value , 
+		name,(AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + i)->text.value , 
 		deviceFeatures[i].state);
 	}
 
@@ -517,10 +516,10 @@ indigo_result UpdateStateItems(indigo_device *device)
 }
 indigo_result CreateCurrentSensorPorts(indigo_device *device){
 
-	AUX_POWER_OUTLET_PROPERTY = indigo_init_switch_property(NULL,device->name,
+	AUX_SWITCH_POWER_OUTLETS_PROPERTY = indigo_init_switch_property(NULL,device->name,
 	"SWITCH_PORT_PROPERTY",AUX_GROUP,"Switch Ports",INDIGO_OK_STATE,
 	INDIGO_RW_PERM,INDIGO_ANY_OF_MANY_RULE,8);
-	if (AUX_POWER_OUTLET_PROPERTY == NULL)
+	if (AUX_SWITCH_POWER_OUTLETS_PROPERTY == NULL)
 		return INDIGO_FAILED;
 
 	CURRENT_SENSOR_PROPERTY = indigo_init_number_property(NULL, device->name, 
@@ -549,8 +548,8 @@ indigo_result CreateCurrentSensorPorts(indigo_device *device){
 		if(deviceFeatures[i].type == MPX){
 			char name[20] = {0};
 			sprintf(name,"SWITCH_PORT_ITEM_%d",nSwitch + 1);
-			indigo_init_switch_item((AUX_POWER_OUTLET_PROPERTY->items + nSwitch),name,
-			(AUX_OUTLET_NAMES_PROPERTY->items + i)->text.value, deviceFeatures[i].value);
+			indigo_init_switch_item((AUX_SWITCH_POWER_OUTLETS_PROPERTY->items + nSwitch),name,
+			(AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + i)->text.value, deviceFeatures[i].value);
 			nSwitch++;
 		}
 
@@ -560,7 +559,7 @@ indigo_result CreateCurrentSensorPorts(indigo_device *device){
 			sprintf(name,"CURRENT_SENSOR_%d",index + 1);
 
 			indigo_init_number_item((CURRENT_SENSOR_PROPERTY->items + index),
-			name,(AUX_OUTLET_NAMES_PROPERTY->items + index)->text.value,deviceFeatures[i].minvalue,
+			name,(AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + index)->text.value,deviceFeatures[i].minvalue,
 			deviceFeatures[i].maxvalue,0.1,deviceFeatures[i].value);
 			index++;
 		}
@@ -602,8 +601,8 @@ indigo_result CreateCurrentSensorPorts(indigo_device *device){
 			"Power [W]", 0, 200, 0.1, power);
 	}
 
-	indigo_define_property(device,AUX_POWER_OUTLET_PROPERTY,NULL);
-	indigo_update_property(device,AUX_POWER_OUTLET_PROPERTY,NULL);
+	indigo_define_property(device,AUX_SWITCH_POWER_OUTLETS_PROPERTY,NULL);
+	indigo_update_property(device,AUX_SWITCH_POWER_OUTLETS_PROPERTY,NULL);
 	indigo_define_property(device,AUX_INFO_PROPERTY,NULL);
 	indigo_update_property(device,AUX_INFO_PROPERTY,NULL);
 	indigo_define_property(device,AUX_WEATHER_PROPERTY,NULL);
@@ -620,12 +619,12 @@ indigo_result UpdatePWMModeItems(indigo_device *device){
 	int nItem = 0;
 	for(int i = 0; i < nTotalFeatures; i++){
 		if(deviceFeatures[i].type == MODE){
-			(PWM_CONFIGURATION_PROPERTY->items + nItem)->number.value = deviceFeatures[i].value;
+			(AUX_PWM_MODES_PROPERTY->items + nItem)->number.value = deviceFeatures[i].value;
 			nItem++;
 		}
 	}
 
-	indigo_update_property(device,PWM_CONFIGURATION_PROPERTY,NULL);
+	indigo_update_property(device,AUX_PWM_MODES_PROPERTY,NULL);
 }
 indigo_result UpdateSwitchItems(indigo_device *device)
 {
@@ -633,12 +632,12 @@ indigo_result UpdateSwitchItems(indigo_device *device)
 	for(int i = 0; i < portNum; i++){
 		if(deviceFeatures[i].type == MPX){
 
-			(AUX_POWER_OUTLET_PROPERTY->items + nSwitch)->sw.value = deviceFeatures[i].value;
+			(AUX_SWITCH_POWER_OUTLETS_PROPERTY->items + nSwitch)->sw.value = deviceFeatures[i].value;
 			nSwitch++;
 		}
 	}
 
-	indigo_update_property(device,AUX_POWER_OUTLET_PROPERTY,NULL);
+	indigo_update_property(device,AUX_SWITCH_POWER_OUTLETS_PROPERTY,NULL);
 }
 indigo_result UpdateCurrentSensorPorts(indigo_device *device)
 {
@@ -653,7 +652,7 @@ indigo_result UpdateCurrentSensorPorts(indigo_device *device)
 		}
 
 		if(deviceFeatures[i].type == AON){
-			(ALWAYS_ON_PORT_PROPERTY->items + nAON)->number.value = deviceFeatures[i].value;
+			(AUX_ALWAYS_ON_PORTS_PROPERTY->items + nAON)->number.value = deviceFeatures[i].value;
 			nAON++;
 		}
 
@@ -684,7 +683,7 @@ indigo_result UpdateCurrentSensorPorts(indigo_device *device)
 	indigo_update_property(device,AUX_INFO_PROPERTY,NULL);
 	indigo_update_property(device,CURRENT_SENSOR_PROPERTY,NULL);
 	indigo_update_property(device,AUX_WEATHER_PROPERTY,NULL);
-	indigo_update_property(device,ALWAYS_ON_PORT_PROPERTY,NULL);
+	indigo_update_property(device,AUX_ALWAYS_ON_PORTS_PROPERTY,NULL);
 
 	return INDIGO_OK;
 }
@@ -706,13 +705,13 @@ indigo_result ReCreatePWMPorts(indigo_device *device)
 		}
 	}
 
-	if(X_AUX_VARIABLE_POWER_OUTLET_PROPERTY == NULL){
-		X_AUX_VARIABLE_POWER_OUTLET_PROPERTY = indigo_init_number_property(NULL, device->name, "X_AUX_VARIABLE_POWER_OUTLET", AUX_GROUP, "Variable voltage power outlet", INDIGO_OK_STATE, INDIGO_RW_PERM, numVar);
-		if (X_AUX_VARIABLE_POWER_OUTLET_PROPERTY == NULL)
+	if(AUX_PWM_POWER_OUTLETS_PROPERTY == NULL){
+		AUX_PWM_POWER_OUTLETS_PROPERTY = indigo_init_number_property(NULL, device->name, "X_AUX_VARIABLE_POWER_OUTLET", AUX_GROUP, "Variable voltage power outlet", INDIGO_OK_STATE, INDIGO_RW_PERM, numVar);
+		if (AUX_PWM_POWER_OUTLETS_PROPERTY == NULL)
 			return INDIGO_FAILED;
-	}else if(X_AUX_VARIABLE_POWER_OUTLET_PROPERTY->count != numVar){
-		indigo_delete_property(device, X_AUX_VARIABLE_POWER_OUTLET_PROPERTY,NULL);
-		indigo_resize_property(X_AUX_VARIABLE_POWER_OUTLET_PROPERTY,numVar);
+	}else if(AUX_PWM_POWER_OUTLETS_PROPERTY->count != numVar){
+		indigo_delete_property(device, AUX_PWM_POWER_OUTLETS_PROPERTY,NULL);
+		indigo_resize_property(AUX_PWM_POWER_OUTLETS_PROPERTY,numVar);
 	}
 
 
@@ -720,26 +719,26 @@ indigo_result ReCreatePWMPorts(indigo_device *device)
 		char name[20] = {0};
 		char label[20] = {0};
 		sprintf(name,"OUTLET_%d",var[item]);
-		indigo_init_number_item(X_AUX_VARIABLE_POWER_OUTLET_PROPERTY->items + item, 
-		name, (AUX_OUTLET_NAMES_PROPERTY->items + (var[item]))->text.value, 
+		indigo_init_number_item(AUX_PWM_POWER_OUTLETS_PROPERTY->items + item, 
+		name, (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + (var[item]))->text.value, 
 		0, 255, 1, deviceFeatures[var[item]].value);
 	}
 
-	if(!X_AUX_VARIABLE_POWER_OUTLET_PROPERTY->defined){
-		indigo_define_property(device,X_AUX_VARIABLE_POWER_OUTLET_PROPERTY,NULL);
+	if(!AUX_PWM_POWER_OUTLETS_PROPERTY->defined){
+		indigo_define_property(device,AUX_PWM_POWER_OUTLETS_PROPERTY,NULL);
 	}
 	// PWM switches 
 	//
 	if(numSw > 0){
-	if(PWM_SWITCHES_PROPERTY == NULL){
-		PWM_SWITCHES_PROPERTY = indigo_init_switch_property(NULL, device->name, 
-		"PWM_SWITCHES_PROPERTY", AUX_GROUP, "PWM Switches", INDIGO_OK_STATE, 
+	if(AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY == NULL){
+		AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY = indigo_init_switch_property(NULL, device->name, 
+		"AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY", AUX_GROUP, "PWM Switches", INDIGO_OK_STATE, 
 		INDIGO_RW_PERM, INDIGO_ANY_OF_MANY_RULE,numSw);
-		if (PWM_SWITCHES_PROPERTY == NULL)
+		if (AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY == NULL)
 			return INDIGO_FAILED;
-	}else if(PWM_SWITCHES_PROPERTY->count != numSw){
-		indigo_delete_property(device, PWM_SWITCHES_PROPERTY,NULL);
-		indigo_resize_property(PWM_SWITCHES_PROPERTY,numSw);
+	}else if(AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY->count != numSw){
+		indigo_delete_property(device, AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY,NULL);
+		indigo_resize_property(AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY,numSw);
 	}
 	}
 	for(int item = 0; item < numSw; item++){
@@ -747,25 +746,24 @@ indigo_result ReCreatePWMPorts(indigo_device *device)
 		char label[20] = {0};
 		sprintf(name,"OUTLET_%d",sw[item]);
 		sprintf(label,"PWM Switch %d",sw[item]);
-		indigo_init_switch_item(PWM_SWITCHES_PROPERTY->items + item, 
-		name, (AUX_OUTLET_NAMES_PROPERTY->items + (sw[item]))->text.value,
+		indigo_init_switch_item(AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY->items + item, 
+		name, (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + (sw[item]))->text.value,
 		deviceFeatures[sw[item]].state );
 	}
 
-	if((numSw) > 0 && !PWM_SWITCHES_PROPERTY->defined){
-		indigo_define_property(device,PWM_SWITCHES_PROPERTY,NULL);
+	if((numSw) > 0 && !AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY->defined){
+		indigo_define_property(device,AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY,NULL);
 	}
 
-	indigo_update_property(device, PWM_SWITCHES_PROPERTY,NULL);
-	indigo_update_property(device, X_AUX_VARIABLE_POWER_OUTLET_PROPERTY, NULL);
+	indigo_update_property(device, AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY,NULL);
+	indigo_update_property(device, AUX_PWM_POWER_OUTLETS_PROPERTY, NULL);
 
 	return INDIGO_OK;
 }
 
 
-/// <summary>
+
 /// Queries the device PWM ports and updates the driver's internal datastructures
-/// </summary>
 /// TODO: completely redo this method as it is not aligned with the rest
 indigo_result QueryPWMPorts(indigo_device *device) {
     char response[50];
@@ -796,7 +794,7 @@ indigo_result QueryPWMPorts(indigo_device *device) {
             }
             deviceFeatures[i].state = true;
             snprintf(deviceFeatures[i].name, sizeof(deviceFeatures[i].name), "%s Mode", deviceFeatures[deviceFeatures[i].port - 1].name);
-            //tl_LogMessage("SH.QueryPWMPorts", "switch %d mode %f", i, deviceFeatures[i].value);
+            //tl_LogMessageQueryPWMPorts", "switch %d mode %f", i, deviceFeatures[i].value);
         }
 
         if (deviceFeatures[i].type == SETTEMP) {
@@ -817,7 +815,7 @@ indigo_result QueryPWMPorts(indigo_device *device) {
             deviceFeatures[i].value = atof(words[2]);
             deviceFeatures[i].state = true;
             snprintf(deviceFeatures[i].name, sizeof(deviceFeatures[i].name), "%s Temperature Offset", deviceFeatures[deviceFeatures[i].port - 1].name);
-            //tl_LogMessage("SH.QueryPWMPorts", "switch %d offset %f", i, deviceFeatures[i].value);
+            //tl_LogMessageQueryPWMPorts", "switch %d offset %f", i, deviceFeatures[i].value);
         }
     }
 }
@@ -844,8 +842,7 @@ Feature *QueryDeviceDescription(indigo_device *device)
 
 		if (strcmp(words[0], ">D") != 0)
 		{
-			// tl.LogMessage("SH.QueryDeviceDescription", "Invalid response from device: " + response);
-			// throw new ASCOM.DriverException("Invalid response from device: " + response);
+			INDIGO_DRIVER_ERROR(DRIVER_NAME,"QueryDeviceDescription Invalid response from device: %s",GETDESCRIPTION);
 		}
 		else
 		{
@@ -856,7 +853,7 @@ Feature *QueryDeviceDescription(indigo_device *device)
 	}
 	else
 	{
-		// TBD
+		INDIGO_DRIVER_ERROR(DRIVER_NAME,"QueryDeviceDescription No response from device: [command %s",response);
 	}
 	// Allocate features
 	// Compute number of features n = ports * 2 + 2 + PWM ports * 2 + temp sensors
@@ -870,6 +867,8 @@ Feature *QueryDeviceDescription(indigo_device *device)
 
 	int pwm = 1;
 	int ao = 1;
+
+	short portindex = 0;
 	// translate BoardSignature into an array of Features_t
 	// first the electrical ports, the board signature has the types of ports in order followed by
 	// the optional temp and humidity sensors. We also need to add the input Amps and Input Volts that
@@ -893,7 +892,7 @@ Feature *QueryDeviceDescription(indigo_device *device)
 			features[i].unit = ' ';
 			sprintf(features[i].description, "Switchable Port %d", switchable++);
 			sprintf(features[i].name, "port %d", (i + 1));
-			// tl.LogMessage("SH.QueryDeviceDescription", "Added SWH port at index: " + portindex++);
+			INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceDescription Added SWH port at index: %d",portindex++);
 			break;
 		case 'm':
 			// multiplexed switch port, is RW bool
@@ -907,7 +906,7 @@ Feature *QueryDeviceDescription(indigo_device *device)
 			features[i].unit = ' ';
 			sprintf(features[i].description, "Switchable Port %d", switchable++);
 			sprintf(features[i].name, "port %d" + (i + 1));
-			// tl.LogMessage("SH.QueryDeviceDescription", "Added MPX port at index: " + portindex++);
+			INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceDescription Added MPX port at index: %d", portindex++);
 			break;
 		case 'p':
 			// pwm switch port, is RW analog
@@ -922,7 +921,7 @@ Feature *QueryDeviceDescription(indigo_device *device)
 			sprintf(features[i].description, "PWM Port %d", pwm);
 			sprintf(features[i].name, "PWM port %d", pwm++);
 
-			// tl.LogMessage("SH.QueryDeviceDescription", "Added PWM port at index: " + portindex++);
+			INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceDescription Added PWM port at index: %d",portindex++);
 			havePWM = true;
 			break;
 		case 'a':
@@ -939,7 +938,7 @@ Feature *QueryDeviceDescription(indigo_device *device)
 			sprintf(features[i].description, "Always-On Port %d", ao++);
 			sprintf(features[i].name, "AO port %d" + (i + 1));
 
-			// tl.LogMessage("SH.QueryDeviceDescription", "Added AON port at index: " + portindex++);
+			INDIGO_DRIVER_DEBUG(DRIVER_NAME, "QueryDeviceDescription Added AON port at index: %d", portindex++);
 			break;
 		}
 	}
@@ -959,7 +958,7 @@ Feature *QueryDeviceDescription(indigo_device *device)
 		strcpy(features[index].description, "Output Current Sensor");
 		sprintf(features[index].name, "port %d Amps", (i + 1));
 		index++;
-		// tl.LogMessage("SH.QueryDeviceDescription", "Added CURRENT port at index: " + portindex++);
+		INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceDescription Added CURRENT port at index: %d", portindex++);
 	}
 	// now create "port" for the input current sensor
 	{
@@ -974,7 +973,7 @@ Feature *QueryDeviceDescription(indigo_device *device)
 		strcpy(features[index].description, "Input Current Sensor");
 		strcpy(features[index].name, "Input Amps");
 
-		// tl.LogMessage("SH.QueryDeviceDescription", "Added INPUT CURRENT port at index: " + portindex++);
+		INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceDescription Added INPUT CURRENT port at index: %d",portindex++);
 	}
 	// now create "port" for the input voltage sensor
 	{
@@ -990,7 +989,7 @@ Feature *QueryDeviceDescription(indigo_device *device)
 		strcpy(features[index].description, "Input Voltage Sensor");
 		strcpy(features[index].name, "Input Volts");
 
-		// tl.LogMessage("SH.QueryDeviceDescription", "Added INPUT VOLT port at index: " + portindex++);
+		INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceDescription Added INPUT VOLT port at index: %d",portindex++);
 	}
 	// if we have PWM ports lets add the mode and offset selectors
 	if (havePWM)
@@ -1012,7 +1011,7 @@ Feature *QueryDeviceDescription(indigo_device *device)
 			sprintf(features[index].description, "PWM Port %d Mode (0: variable, 1: on/off, 2:Dewheater, 3:temperature PID", pwm);
 			sprintf(features[index].name, "PWM Port %d Mode", pwm);
 
-			// tl.LogMessage("SH.QueryDeviceDescription", "Added MODE port at index: " + portindex++);
+			INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceDescription Added MODE port at index: %d",portindex++);
 			index++;
 			features[index].canWrite = true;
 			features[index].state = false;
@@ -1025,7 +1024,7 @@ Feature *QueryDeviceDescription(indigo_device *device)
 			sprintf(features[index].description, "PWM Port %d Temp Offset", pwm);
 			sprintf(features[index].name, "PWM Port %d Offset", pwm++);
 
-			// tl.LogMessage("SH.QueryDeviceDescription", "Added SETTEMP port at index: " + portindex++);
+			INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceDescription Added SETTEMP port at index: %d",portindex++);
 			firstPWMPortIndex++;
 		}
 	}
@@ -1044,7 +1043,7 @@ Feature *QueryDeviceDescription(indigo_device *device)
 		strcpy(features[index].description, "Environment Temperature Sensor");
 		strcpy(features[index].name, "Env Temperature");
 
-		// tl.LogMessage("SH.QueryDeviceDescription", "Added ENV TEMP port at index: " + portindex++);
+		INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceDescription Added ENV TEMP port at index: %d", portindex++);
 		index++;
 		features[index].canWrite = false;
 		features[index].state = true;
@@ -1057,7 +1056,7 @@ Feature *QueryDeviceDescription(indigo_device *device)
 		strcpy(features[index].description, "Environment Humidity Sensor");
 		strcpy(features[index].name, "Env Humidity");
 
-		// tl.LogMessage("SH.QueryDeviceDescription", "Added ENV HUMID port at index: " + portindex++);
+		INDIGO_DRIVER_DEBUG(DRIVER_NAME, "QueryDeviceDescription Added ENV HUMID port at index: %d", portindex++);
 		index++;
 		features[index].canWrite = false;
 		features[index].state = true;
@@ -1070,7 +1069,7 @@ Feature *QueryDeviceDescription(indigo_device *device)
 		strcpy(features[index].description, "Environment Dewpoint");
 		strcpy(features[index].name, "Env dewpoint");
 
-		// tl.LogMessage("SH.QueryDeviceDescription", "Added ENV DEW port at index: " + portindex++);
+		INDIGO_DRIVER_DEBUG(DRIVER_NAME, "QueryDeviceDescription Added ENV DEW port at index: %d", portindex++);
 	}
 	if (Contains(BoardSignature, "t"))
 	{
@@ -1090,21 +1089,21 @@ Feature *QueryDeviceDescription(indigo_device *device)
 			sprintf(features[index].description, "Temperature Sensor for PWM port %d", port);
 			sprintf(features[index].name, "Temperature %d", port++);
 
-			// tl.LogMessage("SH.QueryDeviceDescription", "Added TEMP port at index: " + portindex++);
+			INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceDescription Added TEMP port at index: %d",portindex++);
 		}
 	}
 	// the number of "switches" we want the client to display in the UI ( relates to MaxSwitches )
 
-	// tl.LogMessage("SH.QueryDeviceDescription", "Total number of ports found: " + numSwitch);
+	INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceDescription Total number of ports found: %d",nTotalFeatures);
 
 	return features;
 }
 
 static bool pbex_command(indigo_device *device, char *command, char *response, int max);
 
-/// <summary>
+
 /// Queries the device for a status string and updates the driver's internal datastructures
-/// </summary>
+
 void QueryDeviceStatus(indigo_device *device)
 {
 	// CheckConnected("QueryDeviceStatus");
@@ -1116,11 +1115,11 @@ void QueryDeviceStatus(indigo_device *device)
 	}
 
 	char response[500];
-	// tl.LogMessage("SH.QueryDeviceStatus", "Sending request to device...");
+	INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceStatus Sending request to device...");
 	if (pbex_command(device, GETSTATUS, response, sizeof(response)))
 	{
 
-		// tl.LogMessage("SH.QueryDeviceStatus", "Status string: " + response);
+		INDIGO_DRIVER_DEBUG(DRIVER_NAME, "QueryDeviceStatus Status string: %s", response);
 		// response should be like:
 		// S:0:0:0:0:0:0:0:0:0:0:0:0:8.87:7.19:6.29:5.96:5.89:5.94:5.94:5.94:5.91:5.84:5.82:5.77:0.00:0.00:0.08:3.61:0.00:0.00
 
@@ -1135,8 +1134,7 @@ void QueryDeviceStatus(indigo_device *device)
 		}
 		if (strcmp(words[0], ">S") != 0)
 		{
-			// tl.LogMessage("SH.QueryDeviceStatus", "Invalid response from device: " + response);
-			// throw new ASCOM.DriverException("Invalid response from device: " + response);
+			INDIGO_DRIVER_ERROR(DRIVER_NAME,"QueryDeviceStatus Invalid response from device: %s", response);	
 		}
 		else
 		{
@@ -1163,7 +1161,7 @@ void QueryDeviceStatus(indigo_device *device)
 						deviceFeatures[i].state = true;
 					deviceFeatures[i].value = value;
 				}
-				// tl.LogMessage("SH.QueryDeviceStatus", "switch " + i + " value " + deviceFeatures[i].value);
+				INDIGO_DRIVER_DEBUG(DRIVER_NAME, "QueryDeviceStatus switch %d value %f", i,  deviceFeatures[i].value);
 				index++;
 			}
 			// now iterate through the ports to update the current sensors
@@ -1172,19 +1170,19 @@ void QueryDeviceStatus(indigo_device *device)
 				int j = i + portNum;
 				deviceFeatures[j].state = true;
 				deviceFeatures[j].value = atof(words[index]);
-				// tl.LogMessage("SH.QueryDeviceStatus", "switch " + j + " value " + deviceFeatures[j].value);
+				INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceStatus switch %d value %f", j, deviceFeatures[j].value);
 				index++;
 			}
 			// now do the input ports
 			int p = portNum * 2;
 			deviceFeatures[p].state = true;
 			deviceFeatures[p].value = atof(words[index]);
-			// tl.LogMessage("SH.QueryDeviceStatus", "switch " + p + " value " + deviceFeatures[p].value);
+			INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceStatus switch %d value %f",p, deviceFeatures[p].value);
 			index++;
 			p++;
 			deviceFeatures[p].state = true;
 			deviceFeatures[p].value = atof(words[index]);
-			// tl.LogMessage("SH.QueryDeviceStatus", "switch " + p + " value " + deviceFeatures[p].value);
+			INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceStatus switch %d value %f",p, deviceFeatures[p].value);
 			index++;
 			p++;
 
@@ -1192,7 +1190,7 @@ void QueryDeviceStatus(indigo_device *device)
 			if (havePWM)
 			{
 				p += (2 * GetNUMPWMPorts(BoardSignature));
-				// tl.LogMessage("SH.QueryDeviceStatus", "skipped PWM ports");
+				INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceStatus skipped PWM ports");
 			}
 			// and finaly the temp and humid sensors if they are present in the board signature
 			// the board will report 'f' and 't' only if an SHT31 or AHT10 sensor is attached at power-on
@@ -1201,15 +1199,15 @@ void QueryDeviceStatus(indigo_device *device)
 				// temperature
 				deviceFeatures[p].state = true;
 				deviceFeatures[p].value = atof(words[index++]);
-				// tl.LogMessage("SH.QueryDeviceStatus", "switch " + p + " value " + deviceFeatures[p].value);
+				INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceStatus switch %d value %f",p, deviceFeatures[p].value);
 				//  humidity
 				deviceFeatures[++p].state = true;
 				deviceFeatures[p].value = atof(words[index++]);
-				// tl.LogMessage("SH.QueryDeviceStatus", "switch " + p + " value " + deviceFeatures[p].value);
+				INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceStatus switch %d value %f",p, deviceFeatures[p].value);
 				//  dewpoint
 				deviceFeatures[++p].state = true;
 				deviceFeatures[p].value = atof(words[index++]);
-				// tl.LogMessage("SH.QueryDeviceStatus", "switch " + p + " value " + deviceFeatures[p].value);
+				INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceStatus switch %d value %f",p, deviceFeatures[p].value);
 				p++;
 			}
 			if (Contains(BoardSignature, "t"))
@@ -1219,7 +1217,7 @@ void QueryDeviceStatus(indigo_device *device)
 				{
 					deviceFeatures[p].state = true;
 					deviceFeatures[p].value = atof(words[index++]);
-					// tl.LogMessage("SH.QueryDeviceStatus", "switch " + p + " value " + deviceFeatures[p].value);
+					INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceStatus switch %d value %f",p, deviceFeatures[p].value);
 					p++;
 				}
 			}
@@ -1227,8 +1225,7 @@ void QueryDeviceStatus(indigo_device *device)
 	}
 	else
 	{
-		//     tl.LogMessage("SH.QueryDeviceStatus", "Invalid response from device: " + response);
-		//     throw new ASCOM.DriverException("Invalid response from device: " + response);
+		INDIGO_DRIVER_ERROR( DRIVER_NAME, "QueryDeviceStatus Invalid response from device: %s", response);
 	}
 }
 
@@ -1269,39 +1266,29 @@ int indigo_read_line_local(int handle, char *buffer, int length) {
 
 static bool pbex_command(indigo_device *device, char *command, char *response, int max)
 {	
-
-
 	tcflush(PRIVATE_DATA->handle, TCIOFLUSH);	
 	bool result  = indigo_write(PRIVATE_DATA->handle, command, strlen(command));
-	indigo_write(PRIVATE_DATA->handle, "\n", 1);
-
 
 	if (response != NULL && result)
 	{
-		printf("Error: %s\n",strerror(errno));
 		if (indigo_read_line_local(PRIVATE_DATA->handle, response, max) == -1)
 		{
-			int error = errno;
-
-			INDIGO_DRIVER_DEBUG(DRIVER_NAME,"Error: %s\n",strerror(error));
-			printf("Error: %s\n",strerror(error));
-
-			return true;
+			INDIGO_DRIVER_ERROR(DRIVER_NAME,"pbex_command: %s\n",strerror(errno));
+			return false;
 		}
 	}
-
+	
 	INDIGO_DRIVER_DEBUG(DRIVER_NAME, "Command %s -> %s", command, response != NULL ? response : "NULL");
+
 	return true;
 }
 
 static void pbex_open(indigo_device *device)
 {
 	char response[128];
-	//PRIVATE_DATA->handle = indigo_open_serial_with_speed(DEVICE_PORT_ITEM->text.value, 9600);
 	PRIVATE_DATA->handle = indigo_open_serial(DEVICE_PORT_ITEM->text.value);
 	if (PRIVATE_DATA->handle > 0)
 	{
-
 		int attempt = 0;
 		while (true)
 		{
@@ -1313,11 +1300,6 @@ static void pbex_open(indigo_device *device)
 					INDIGO_DRIVER_ERROR(DRIVER_NAME, "Connected to UPB %s", DEVICE_PORT_ITEM->text.value);
 					PRIVATE_DATA->version = 1;
 					break;
-				}
-				else
-				{
-					close(PRIVATE_DATA->handle);
-					PRIVATE_DATA->handle = 0;
 				}
 			}
 			if (attempt++ == 3)
@@ -1343,54 +1325,55 @@ static indigo_result aux_attach(indigo_device *device)
 	assert(PRIVATE_DATA != NULL);
 	if (indigo_aux_attach(device, DRIVER_NAME, DRIVER_VERSION, INDIGO_INTERFACE_AUX_POWERBOX) == INDIGO_OK)
 	{
-		INFO_PROPERTY->count = 0;
+		INFO_PROPERTY->count = 7;
 		strcpy(INFO_DEVICE_MODEL_ITEM->text.value, "Unknown");
 		strcpy(INFO_DEVICE_FW_REVISION_ITEM->text.value, "Unknown");
+		strcpy(INFO_DEVICE_HW_REVISION_ITEM->text.value,"Unknown");
 		// -------------------------------------------------------------------------------- OUTLET_NAMES
-		AUX_OUTLET_NAMES_PROPERTY = indigo_init_text_property(NULL, device->name, AUX_OUTLET_NAMES_PROPERTY_NAME, AUX_GROUP, "Outlet names", INDIGO_OK_STATE, INDIGO_RW_PERM, 14);
-		if (AUX_OUTLET_NAMES_PROPERTY == NULL)
+		AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY = indigo_init_text_property(NULL, device->name, AUX_OUTLET_NAMES_PROPERTY_NAME, AUX_GROUP, "Outlet names", INDIGO_OK_STATE, INDIGO_RW_PERM, 14);
+		if (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY == NULL)
 			return INDIGO_FAILED;
 
-		indigo_init_text_item(AUX_POWER_OUTLET_NAME_1, "POWER_OUTLET_NAME_1", "Port 1", "Port 1");
-		indigo_init_text_item(AUX_POWER_OUTLET_NAME_2, "POWER_OUTLET_NAME_2", "Port 2", "Port 2");
-		indigo_init_text_item(AUX_POWER_OUTLET_NAME_3, "POWER_OUTLET_NAME_3", "Port 3", "Port 3");
-		indigo_init_text_item(AUX_POWER_OUTLET_NAME_4, "POWER_OUTLET_NAME_4", "Port 4", "Port 4");
-		indigo_init_text_item(AUX_POWER_OUTLET_NAME_5, "POWER_OUTLET_NAME_5", "Port 5", "Port 5");
-		indigo_init_text_item(AUX_POWER_OUTLET_NAME_6, "POWER_OUTLET_NAME_6", "Port 6", "Port 6");
-		indigo_init_text_item(AUX_POWER_OUTLET_NAME_7, "POWER_OUTLET_NAME_7", "Port 7", "Port 7");
-		indigo_init_text_item(AUX_POWER_OUTLET_NAME_8, "POWER_OUTLET_NAME_8", "Port 8", "Port 8");
-		indigo_init_text_item(AUX_POWER_OUTLET_NAME_9, "POWER_OUTLET_NAME_9", "Port 9", "Port 9");
-		indigo_init_text_item(AUX_POWER_OUTLET_NAME_10, "POWER_OUTLET_NAME_10", "Port 10", "Port 10");
-		indigo_init_text_item(AUX_POWER_OUTLET_NAME_11, "POWER_OUTLET_NAME_11", "Port 11", "Port 11");
-		indigo_init_text_item(AUX_POWER_OUTLET_NAME_12, "POWER_OUTLET_NAME_12", "Port 12", "Port 12");
-		indigo_init_text_item(AUX_POWER_OUTLET_NAME_13, "POWER_OUTLET_NAME_13", "Port 13", "Port 13");
-		indigo_init_text_item(AUX_POWER_OUTLET_NAME_14, "POWER_OUTLET_NAME_14", "Port 14", "Port 14");	
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_1, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_1", "Port 1", "Port 1");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_2, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_2", "Port 2", "Port 2");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_3, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_3", "Port 3", "Port 3");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_4, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_4", "Port 4", "Port 4");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_5, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_5", "Port 5", "Port 5");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_6, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_6", "Port 6", "Port 6");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_7, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_7", "Port 7", "Port 7");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_8, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_8", "Port 8", "Port 8");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_9, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_9", "Port 9", "Port 9");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_10, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_10", "Port 10", "Port 10");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_11, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_11", "Port 11", "Port 11");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_12, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_12", "Port 12", "Port 12");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_13, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_13", "Port 13", "Port 13");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_14, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_14", "Port 14", "Port 14");	
 
-		PWM_CONFIGURATION_PROPERTY = indigo_init_number_property(NULL, device->name, "PWM_CONFIGURATION_PROPERTY", AUX_GROUP, "PWM Configuration", INDIGO_OK_STATE, INDIGO_RW_PERM, 4);
-		if (PWM_CONFIGURATION_PROPERTY == NULL)
+		AUX_PWM_MODES_PROPERTY = indigo_init_number_property(NULL, device->name, "AUX_PWM_MODES_PROPERTY", AUX_GROUP, "PWM Configuration", INDIGO_OK_STATE, INDIGO_RW_PERM, 4);
+		if (AUX_PWM_MODES_PROPERTY == NULL)
 			return INDIGO_FAILED;
 
-		indigo_init_number_item(PWM_CONFIGURATION_ITEM_1,"PWM_CONFIGURATION_ITEM_1", "PWM Configuration 1",0,3,1,0);
-		indigo_init_number_item(PWM_CONFIGURATION_ITEM_2,"PWM_CONFIGURATION_ITEM_2", "PWM Configuration 2",0,3,1,0);
-		indigo_init_number_item(PWM_CONFIGURATION_ITEM_3,"PWM_CONFIGURATION_ITEM_3", "PWM Configuration 3",0,3,1,0);
-		indigo_init_number_item(PWM_CONFIGURATION_ITEM_4,"PWM_CONFIGURATION_ITEM_4", "PWM Configuration 4",0,3,1,0);
+		indigo_init_number_item(AUX_PWM_MODE_ITEM_1,"AUX_PWM_MODE_ITEM_1", "PWM Configuration 1",0,3,1,0);
+		indigo_init_number_item(AUX_PWM_MODE_ITEM_2,"AUX_PWM_MODE_ITEM_2", "PWM Configuration 2",0,3,1,0);
+		indigo_init_number_item(AUX_PWM_MODE_ITEM_3,"AUX_PWM_MODE_ITEM_3", "PWM Configuration 3",0,3,1,0);
+		indigo_init_number_item(AUX_PWM_MODE_ITEM_4,"AUX_PWM_MODE_ITEM_4", "PWM Configuration 4",0,3,1,0);
 		
-		PWM_TEMP_OFFSET_PROPERTY = indigo_init_number_property(NULL, device->name, "PWM_TEMP_OFFSET_PROPERTY", AUX_GROUP, "PWM Temperature Offset", INDIGO_OK_STATE, INDIGO_RW_PERM, 4);
-		if (PWM_TEMP_OFFSET_PROPERTY == NULL)
+		AUX_PWM_TEMP_OFFSETS_PROPERTY = indigo_init_number_property(NULL, device->name, "AUX_PWM_TEMP_OFFSETS_PROPERTY", AUX_GROUP, "PWM Temperature Offset", INDIGO_OK_STATE, INDIGO_RW_PERM, 4);
+		if (AUX_PWM_TEMP_OFFSETS_PROPERTY == NULL)
 			return INDIGO_FAILED;
 
-		indigo_init_number_item(PWM_TEMP_OFFSET_ITEM_1,"PWM_TEMP_OFFSET_ITEM_1", "PWM Temperature Offset 1",0,10,1,0);
-		indigo_init_number_item(PWM_TEMP_OFFSET_ITEM_2,"PWM_TEMP_OFFSET_ITEM_2", "PWM Temperature Offset 2",0,10,1,0);
-		indigo_init_number_item(PWM_TEMP_OFFSET_ITEM_3,"PWM_TEMP_OFFSET_ITEM_3", "PWM Temperature Offset 3",0,10,1,0);
-		indigo_init_number_item(PWM_TEMP_OFFSET_ITEM_4,"PWM_TEMP_OFFSET_ITEM_4", "PWM Temperature Offset 4",0,10,1,0);
+		indigo_init_number_item(AUX_PWM_TEMP_OFFSET_ITEM_1,"AUX_PWM_TEMP_OFFSET_ITEM_1", "PWM Temperature Offset 1",0,10,1,0);
+		indigo_init_number_item(AUX_PWM_TEMP_OFFSET_ITEM_2,"AUX_PWM_TEMP_OFFSET_ITEM_2", "PWM Temperature Offset 2",0,10,1,0);
+		indigo_init_number_item(AUX_PWM_TEMP_OFFSET_ITEM_3,"AUX_PWM_TEMP_OFFSET_ITEM_3", "PWM Temperature Offset 3",0,10,1,0);
+		indigo_init_number_item(AUX_PWM_TEMP_OFFSET_ITEM_4,"AUX_PWM_TEMP_OFFSET_ITEM_4", "PWM Temperature Offset 4",0,10,1,0);
 
-		ALWAYS_ON_PORT_PROPERTY = indigo_init_number_property(NULL,device->name,"ALWAYS_ON_PORT_PROPERTY", 
+		AUX_ALWAYS_ON_PORTS_PROPERTY = indigo_init_number_property(NULL,device->name,"AUX_ALWAYS_ON_PORTS_PROPERTY", 
 			AUX_GROUP,"Always On Ports",INDIGO_OK_STATE,INDIGO_RO_PERM,2);
 
-		if (ALWAYS_ON_PORT_PROPERTY == NULL)
+		if (AUX_ALWAYS_ON_PORTS_PROPERTY == NULL)
 			return INDIGO_FAILED;
-		indigo_init_number_item(ALWAYS_ON_PORT_ITEM_1,"ALWAYS_ON_PORT_PROPERTY","Always On Port 1",255,255,255,255);
-		indigo_init_number_item(ALWAYS_ON_PORT_ITEM_2,"ALWAYS_ON_PORT_PROPERTY","Always On Port 2",255,255,255,255);
+		indigo_init_number_item(AUX_ALWAYS_ON_PORTITEM_1,"AUX_ALWAYS_ON_PORTITEM_1","Always On Port 1",255,255,255,255);
+		indigo_init_number_item(AUX_ALWAYS_ON_PORTITEM_2,"AUX_ALWAYS_ON_PORTITEM_2","Always On Port 2",255,255,255,255);
 
 		// -------------------------------------------------------------------------------- DEVICE_PORT, DEVICE_PORTS
 		ADDITIONAL_INSTANCES_PROPERTY->hidden = DEVICE_CONTEXT->base_device != NULL;
@@ -1421,26 +1404,24 @@ static indigo_result aux_enumerate_properties(indigo_device *device, indigo_clie
 {
 	if (IS_CONNECTED)
 	{
-		if (indigo_property_match(AUX_POWER_OUTLET_PROPERTY, property))
-			indigo_define_property(device, AUX_POWER_OUTLET_PROPERTY, NULL);
+		if (indigo_property_match(AUX_SWITCH_POWER_OUTLETS_PROPERTY, property))
+			indigo_define_property(device, AUX_SWITCH_POWER_OUTLETS_PROPERTY, NULL);
 
-		if (indigo_property_match(X_AUX_VARIABLE_POWER_OUTLET_PROPERTY, property)){
-		 	indigo_define_property(device, X_AUX_VARIABLE_POWER_OUTLET_PROPERTY, NULL);
-
-			//ReCreatePWMPorts(device);
+		if (indigo_property_match(AUX_PWM_POWER_OUTLETS_PROPERTY, property)){
+		 	indigo_define_property(device, AUX_PWM_POWER_OUTLETS_PROPERTY, NULL);
 		}
-		if (indigo_property_match(PWM_CONFIGURATION_PROPERTY, property))
-			indigo_define_property(device, PWM_CONFIGURATION_PROPERTY, NULL);
+		if (indigo_property_match(AUX_PWM_MODES_PROPERTY, property))
+			indigo_define_property(device, AUX_PWM_MODES_PROPERTY, NULL);
 
-		if (indigo_property_match(PWM_TEMP_OFFSET_PROPERTY, property))
-			indigo_define_property(device, PWM_TEMP_OFFSET_PROPERTY, NULL);
+		if (indigo_property_match(AUX_PWM_TEMP_OFFSETS_PROPERTY, property))
+			indigo_define_property(device, AUX_PWM_TEMP_OFFSETS_PROPERTY, NULL);
 
-		if (indigo_property_match(ALWAYS_ON_PORT_PROPERTY, property))
-			indigo_define_property(device, ALWAYS_ON_PORT_PROPERTY, NULL);		
+		if (indigo_property_match(AUX_ALWAYS_ON_PORTS_PROPERTY, property))
+			indigo_define_property(device, AUX_ALWAYS_ON_PORTS_PROPERTY, NULL);		
 
 	}
-	if (indigo_property_match(AUX_OUTLET_NAMES_PROPERTY, property))
-		indigo_define_property(device, AUX_OUTLET_NAMES_PROPERTY, NULL);
+	if (indigo_property_match(AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY, property))
+		indigo_define_property(device, AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY, NULL);
 	return indigo_aux_enumerate_properties(device, NULL, NULL);
 }
 
@@ -1448,15 +1429,8 @@ static void aux_timer_callback(indigo_device *device)
 {
 	if (!IS_CONNECTED)
 		return;
-	char response[128];
-	bool updatePowerOutlet = false;
-	bool updatePowerOutletState = false;
-	bool updatePowerOutletCurrent = false;
-	bool updateWeather = false;
-	bool updateInfo = false;
 
 	pthread_mutex_lock(&PRIVATE_DATA->mutex);
-
 	UpdateCurrentSensorPorts(device);
 	UpdateStateItems(device);
 	indigo_reschedule_timer(device, 30, &PRIVATE_DATA->aux_timer);
@@ -1477,9 +1451,9 @@ static void aux_connection_handler(indigo_device *device)
 
 		if (PRIVATE_DATA->handle > 0)
 		{
-			indigo_define_property(device, PWM_CONFIGURATION_PROPERTY, NULL);
-			indigo_define_property(device, PWM_TEMP_OFFSET_PROPERTY, NULL);
-			indigo_define_property(device, ALWAYS_ON_PORT_PROPERTY, NULL);
+			indigo_define_property(device, AUX_PWM_MODES_PROPERTY, NULL);
+			indigo_define_property(device, AUX_PWM_TEMP_OFFSETS_PROPERTY, NULL);
+			indigo_define_property(device, AUX_ALWAYS_ON_PORTS_PROPERTY, NULL);
 			QueryDeviceStatus(device);
 			if (deviceFeatures == NULL)
 			{
@@ -1490,6 +1464,12 @@ static void aux_connection_handler(indigo_device *device)
 			ReCreatePWMPorts(device);
 			CreateCurrentSensorPorts(device);
 			CreateStateItems(device);
+
+			strcpy(INFO_DEVICE_MODEL_ITEM->text.value, deviceName);
+			strcpy(INFO_DEVICE_FW_REVISION_ITEM->text.value, "Unknown");
+			strcpy(INFO_DEVICE_HW_REVISION_ITEM->text.value,hwRevision);
+			indigo_update_property(device, INFO_PROPERTY, NULL);
+
 			indigo_set_timer(device, 0, aux_timer_callback, &PRIVATE_DATA->aux_timer);
 			CONNECTION_PROPERTY->state = INDIGO_OK_STATE;
 		}
@@ -1505,17 +1485,23 @@ static void aux_connection_handler(indigo_device *device)
 	{
 		indigo_cancel_timer_sync(device, &PRIVATE_DATA->aux_timer);
 
-		indigo_delete_property(device, AUX_POWER_OUTLET_PROPERTY, NULL);
-		indigo_delete_property(device, X_AUX_VARIABLE_POWER_OUTLET_PROPERTY, NULL);
-		//indigo_delete_property(device, AUX_OUTLET_NAMES_PROPERTY, NULL);
-		indigo_delete_property(device, PWM_CONFIGURATION_PROPERTY, NULL);
-		indigo_delete_property(device, PWM_TEMP_OFFSET_PROPERTY, NULL);
-		indigo_delete_property(device, PWM_SWITCHES_PROPERTY, NULL);
+		indigo_delete_property(device, AUX_SWITCH_POWER_OUTLETS_PROPERTY, NULL);
+		indigo_delete_property(device, AUX_PWM_POWER_OUTLETS_PROPERTY, NULL);
+		//indigo_delete_property(device, AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY, NULL);
+		indigo_delete_property(device, AUX_PWM_MODES_PROPERTY, NULL);
+		indigo_delete_property(device, AUX_PWM_TEMP_OFFSETS_PROPERTY, NULL);
+		indigo_delete_property(device, AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY, NULL);
 		indigo_delete_property(device, CURRENT_SENSOR_PROPERTY, NULL);
 		indigo_delete_property(device, AUX_WEATHER_PROPERTY, NULL);
 		indigo_delete_property(device, AUX_INFO_PROPERTY, NULL);
 		indigo_delete_property(device, AUX_STATE_PROPERTY, NULL);
-		indigo_delete_property(device, ALWAYS_ON_PORT_PROPERTY, NULL);
+		indigo_delete_property(device, AUX_ALWAYS_ON_PORTS_PROPERTY, NULL);
+
+		strcpy(INFO_DEVICE_MODEL_ITEM->text.value, "Unknown");
+		strcpy(INFO_DEVICE_FW_REVISION_ITEM->text.value, "Unknown");
+		strcpy(INFO_DEVICE_HW_REVISION_ITEM->text.value,"Unknown");
+		indigo_update_property(device, INFO_PROPERTY, NULL);
+
 		if(deviceFeatures){
 			free(deviceFeatures);
 			deviceFeatures = NULL;
@@ -1555,17 +1541,17 @@ static void aux_power_outlet_handler(indigo_device *device)
 			if (deviceFeatures[i].type == MPX)
 			{
 				if (deviceFeatures[i].value !=
-					(AUX_POWER_OUTLET_PROPERTY->items + iNPort)->sw.value)
+					(AUX_SWITCH_POWER_OUTLETS_PROPERTY->items + iNPort)->sw.value)
 				{
 
-					SetSwitchValue(device, i, (AUX_POWER_OUTLET_PROPERTY->items + iNPort)->sw.value);
+					SetSwitchValue(device, i, (AUX_SWITCH_POWER_OUTLETS_PROPERTY->items + iNPort)->sw.value);
 				}
 				iNPort++;
 			}
 		}
 
-		AUX_POWER_OUTLET_PROPERTY->state = INDIGO_OK_STATE;
-		indigo_update_property(device, AUX_POWER_OUTLET_PROPERTY, NULL);
+		AUX_SWITCH_POWER_OUTLETS_PROPERTY->state = INDIGO_OK_STATE;
+		indigo_update_property(device, AUX_SWITCH_POWER_OUTLETS_PROPERTY, NULL);
 	}
 
 	pthread_mutex_unlock(&PRIVATE_DATA->mutex);
@@ -1575,7 +1561,7 @@ static void aux_pwm_configuration_handler(indigo_device *device)
 {
 	char response[128];
 	pthread_mutex_lock(&PRIVATE_DATA->mutex);
-	PWM_CONFIGURATION_PROPERTY->state = INDIGO_OK_STATE;
+	AUX_PWM_MODES_PROPERTY->state = INDIGO_OK_STATE;
 
 	// get the index of PWM
 	//
@@ -1584,10 +1570,10 @@ static void aux_pwm_configuration_handler(indigo_device *device)
 	{
 		if(deviceFeatures[i].type == MODE){ index = i; }
 	}
-	for(int i = 0; i < PWM_CONFIGURATION_PROPERTY->count; i++)
+	for(int i = 0; i < AUX_PWM_MODES_PROPERTY->count; i++)
 	{
 		SetSwitchValue(device,index + i,
-		(PWM_CONFIGURATION_PROPERTY->items + i)->number.value);
+		(AUX_PWM_MODES_PROPERTY->items + i)->number.value);
 		// skip temp offset
 		//
 		index++;
@@ -1595,14 +1581,14 @@ static void aux_pwm_configuration_handler(indigo_device *device)
 	
 	QueryDeviceStatus(device);
 	ReCreatePWMPorts(device);
-	indigo_update_property(device, PWM_CONFIGURATION_PROPERTY, NULL);
+	indigo_update_property(device, AUX_PWM_MODES_PROPERTY, NULL);
 	pthread_mutex_unlock(&PRIVATE_DATA->mutex);
 }
 
 static void aux_temp_offset_handler(indigo_device *device)
 {
 	pthread_mutex_lock(&PRIVATE_DATA->mutex);
-	PWM_TEMP_OFFSET_PROPERTY->state = INDIGO_OK_STATE;
+	AUX_PWM_TEMP_OFFSETS_PROPERTY->state = INDIGO_OK_STATE;
 
 	pthread_mutex_unlock(&PRIVATE_DATA->mutex);
 }
@@ -1620,13 +1606,13 @@ static void aux_variable_power_outlet_handler(indigo_device *device)
 			if (deviceFeatures[i].type == PWM)
 			{
 
-				SetSwitchValue(device, i, (X_AUX_VARIABLE_POWER_OUTLET_PROPERTY->items + iNPort)->number.value);
+				SetSwitchValue(device, i, (AUX_PWM_POWER_OUTLETS_PROPERTY->items + iNPort)->number.value);
 				iNPort++;
 			}
 		}
 	}
-	X_AUX_VARIABLE_POWER_OUTLET_PROPERTY->state = INDIGO_OK_STATE;
-	indigo_update_property(device, X_AUX_VARIABLE_POWER_OUTLET_PROPERTY, NULL);
+	AUX_PWM_POWER_OUTLETS_PROPERTY->state = INDIGO_OK_STATE;
+	indigo_update_property(device, AUX_PWM_POWER_OUTLETS_PROPERTY, NULL);
 	pthread_mutex_unlock(&PRIVATE_DATA->mutex);
 }
 
@@ -1647,42 +1633,42 @@ static indigo_result aux_change_property(indigo_device *device, indigo_client *c
 		indigo_set_timer(device, 0, aux_connection_handler, NULL);
 		return INDIGO_OK;
 	} 
-	else if (indigo_property_match_changeable(AUX_POWER_OUTLET_PROPERTY, property))
+	else if (indigo_property_match_changeable(AUX_SWITCH_POWER_OUTLETS_PROPERTY, property))
 	{
 		// -------------------------------------------------------------------------------- AUX_POWER_OUTLET
-		indigo_property_copy_values(AUX_POWER_OUTLET_PROPERTY, property, false);
-		AUX_POWER_OUTLET_PROPERTY->state = INDIGO_BUSY_STATE;
-		indigo_update_property(device, AUX_POWER_OUTLET_PROPERTY, NULL);
+		indigo_property_copy_values(AUX_SWITCH_POWER_OUTLETS_PROPERTY, property, false);
+		AUX_SWITCH_POWER_OUTLETS_PROPERTY->state = INDIGO_BUSY_STATE;
+		indigo_update_property(device, AUX_SWITCH_POWER_OUTLETS_PROPERTY, NULL);
 		indigo_set_timer(device, 0, aux_power_outlet_handler, NULL);
 		return INDIGO_OK;
 	}
-	else if (indigo_property_match_changeable(X_AUX_VARIABLE_POWER_OUTLET_PROPERTY, property))
+	else if (indigo_property_match_changeable(AUX_PWM_POWER_OUTLETS_PROPERTY, property))
 	{
 		// -------------------------------------------------------------------------------- X_AUX_VARIABLE_POWER_OUTLET
-		indigo_property_copy_values(X_AUX_VARIABLE_POWER_OUTLET_PROPERTY, property, false);
-		X_AUX_VARIABLE_POWER_OUTLET_PROPERTY->state = INDIGO_BUSY_STATE;
-		indigo_update_property(device, X_AUX_VARIABLE_POWER_OUTLET_PROPERTY, NULL);
+		indigo_property_copy_values(AUX_PWM_POWER_OUTLETS_PROPERTY, property, false);
+		AUX_PWM_POWER_OUTLETS_PROPERTY->state = INDIGO_BUSY_STATE;
+		indigo_update_property(device, AUX_PWM_POWER_OUTLETS_PROPERTY, NULL);
 		indigo_set_timer(device, 0, aux_variable_power_outlet_handler, NULL);
 		return INDIGO_OK;
 		// -------------------------------------------------------------------------------- CONFIG
-	} else if (indigo_property_match_changeable(PWM_CONFIGURATION_PROPERTY, property)) {
+	} else if (indigo_property_match_changeable(AUX_PWM_MODES_PROPERTY, property)) {
 	    // -------------------------------------------------------------------------------- X_AUX_SAVE_DEFAULTS
-		indigo_property_copy_values(PWM_CONFIGURATION_PROPERTY, property, false);
-		PWM_CONFIGURATION_PROPERTY->state = INDIGO_BUSY_STATE;
-		indigo_update_property(device, PWM_CONFIGURATION_PROPERTY, NULL);
+		indigo_property_copy_values(AUX_PWM_MODES_PROPERTY, property, false);
+		AUX_PWM_MODES_PROPERTY->state = INDIGO_BUSY_STATE;
+		indigo_update_property(device, AUX_PWM_MODES_PROPERTY, NULL);
 		indigo_set_timer(device, 0, aux_pwm_configuration_handler, NULL);
 		return INDIGO_OK;
 	} 
-	else if (indigo_property_match_changeable(PWM_TEMP_OFFSET_PROPERTY, property)) {
+	else if (indigo_property_match_changeable(AUX_PWM_TEMP_OFFSETS_PROPERTY, property)) {
 		// -------------------------------------------------------------------------------- X_AUX_REBOOT
-		indigo_property_copy_values(PWM_TEMP_OFFSET_PROPERTY, property, false);
-		PWM_TEMP_OFFSET_PROPERTY->state = INDIGO_BUSY_STATE;
-		indigo_update_property(device, PWM_TEMP_OFFSET_PROPERTY, NULL);
+		indigo_property_copy_values(AUX_PWM_TEMP_OFFSETS_PROPERTY, property, false);
+		AUX_PWM_TEMP_OFFSETS_PROPERTY->state = INDIGO_BUSY_STATE;
+		indigo_update_property(device, AUX_PWM_TEMP_OFFSETS_PROPERTY, NULL);
 		indigo_set_timer(device, 0, aux_temp_offset_handler, NULL);
 		return INDIGO_OK;
-	}else if (indigo_property_match_changeable(AUX_OUTLET_NAMES_PROPERTY, property)) {
+	}else if (indigo_property_match_changeable(AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY, property)) {
 		// -------------------------------------------------------------------------------- X_AUX_OUTLET_NAMES
-		indigo_property_copy_values(AUX_OUTLET_NAMES_PROPERTY, property, false);
+		indigo_property_copy_values(AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY, property, false);
 
 		bool bIsPWMDefined = false;
 		bool bIsPWMSwitchDefined = false;
@@ -1693,52 +1679,52 @@ static indigo_result aux_change_property(indigo_device *device, indigo_client *c
 		for(int i = 0; i < portNum; i++ ){
 
 			if(deviceFeatures[i].type == MPX){
-				snprintf((AUX_POWER_OUTLET_PROPERTY->items + i)->label, 
-				INDIGO_NAME_SIZE, "%s", (AUX_OUTLET_NAMES_PROPERTY->items + i)->text.value);
+				snprintf((AUX_SWITCH_POWER_OUTLETS_PROPERTY->items + i)->label, 
+				INDIGO_NAME_SIZE, "%s", (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + i)->text.value);
 			}
 
 			if(deviceFeatures[i].type == PWM){
 
 				bIsPWMDefined = true;
-				snprintf((X_AUX_VARIABLE_POWER_OUTLET_PROPERTY->items + nPWM)->label, 
-				INDIGO_NAME_SIZE, "%s", (AUX_OUTLET_NAMES_PROPERTY->items + i)->text.value);
+				snprintf((AUX_PWM_POWER_OUTLETS_PROPERTY->items + nPWM)->label, 
+				INDIGO_NAME_SIZE, "%s", (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + i)->text.value);
 				nPWM++;
 			}
 
 			if(deviceFeatures[i].type == SWH){
 				bIsPWMSwitchDefined = true;
-				snprintf((PWM_SWITCHES_PROPERTY->items + nSW)->label, INDIGO_NAME_SIZE, 
-				"%s", (AUX_OUTLET_NAMES_PROPERTY->items + i)->text.value);
+				snprintf((AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY->items + nSW)->label, INDIGO_NAME_SIZE, 
+				"%s", (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + i)->text.value);
 				nSW++;
 			}
 
 			snprintf((CURRENT_SENSOR_PROPERTY->items + i)->label, 
-				INDIGO_NAME_SIZE, "%s", (AUX_OUTLET_NAMES_PROPERTY->items + i)->text.value);
+				INDIGO_NAME_SIZE, "%s", (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + i)->text.value);
 			
 			for(int i = 0; i < portNum; i++){
 				sprintf((AUX_STATE_PROPERTY->items + i)->label,"%s",
-				(AUX_OUTLET_NAMES_PROPERTY->items + i)->text.value);
+				(AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + i)->text.value);
 			}
 			if(deviceFeatures[i].type == AON){
-				snprintf((ALWAYS_ON_PORT_PROPERTY->items + nAON)->label, 
-				INDIGO_NAME_SIZE, "%s", (AUX_OUTLET_NAMES_PROPERTY->items + i)->text.value);
+				snprintf((AUX_ALWAYS_ON_PORTS_PROPERTY->items + nAON)->label, 
+				INDIGO_NAME_SIZE, "%s", (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + i)->text.value);
 				nAON++;
 			}
 		}
-		AUX_OUTLET_NAMES_PROPERTY->state = INDIGO_OK_STATE;
+		AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->state = INDIGO_OK_STATE;
 		if (IS_CONNECTED) {
 
-			indigo_delete_property(device, AUX_POWER_OUTLET_PROPERTY, NULL);
-			indigo_define_property(device, AUX_POWER_OUTLET_PROPERTY, NULL);
+			indigo_delete_property(device, AUX_SWITCH_POWER_OUTLETS_PROPERTY, NULL);
+			indigo_define_property(device, AUX_SWITCH_POWER_OUTLETS_PROPERTY, NULL);
 
 			if(bIsPWMDefined){
-				indigo_delete_property(device, X_AUX_VARIABLE_POWER_OUTLET_PROPERTY, NULL);
-				indigo_define_property(device, X_AUX_VARIABLE_POWER_OUTLET_PROPERTY, NULL);
+				indigo_delete_property(device, AUX_PWM_POWER_OUTLETS_PROPERTY, NULL);
+				indigo_define_property(device, AUX_PWM_POWER_OUTLETS_PROPERTY, NULL);
 			}
 
 			if(bIsPWMSwitchDefined){
-				indigo_delete_property(device, PWM_SWITCHES_PROPERTY, NULL);
-				indigo_define_property(device, PWM_SWITCHES_PROPERTY, NULL);
+				indigo_delete_property(device, AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY, NULL);
+				indigo_define_property(device, AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY, NULL);
 			}
 			indigo_delete_property(device, CURRENT_SENSOR_PROPERTY, NULL);
 			indigo_define_property(device, CURRENT_SENSOR_PROPERTY, NULL);
@@ -1746,16 +1732,16 @@ static indigo_result aux_change_property(indigo_device *device, indigo_client *c
 			indigo_delete_property(device, AUX_STATE_PROPERTY, NULL);
 			indigo_define_property(device, AUX_STATE_PROPERTY, NULL);
 
-			indigo_delete_property(device, ALWAYS_ON_PORT_PROPERTY, NULL);
-			indigo_define_property(device, ALWAYS_ON_PORT_PROPERTY, NULL);
+			indigo_delete_property(device, AUX_ALWAYS_ON_PORTS_PROPERTY, NULL);
+			indigo_define_property(device, AUX_ALWAYS_ON_PORTS_PROPERTY, NULL);
 
-			indigo_update_property(device, AUX_OUTLET_NAMES_PROPERTY, NULL);
+			indigo_update_property(device, AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY, NULL);
 		}
 
 		return INDIGO_OK;
 	}else if (indigo_property_match_changeable(CONFIG_PROPERTY, property)) {
 		if (indigo_switch_match(CONFIG_SAVE_ITEM, property)) {
-			indigo_save_property(device, NULL, AUX_OUTLET_NAMES_PROPERTY);
+			indigo_save_property(device, NULL, AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY);
 		}
 
 	}
@@ -1772,17 +1758,17 @@ static indigo_result aux_detach(indigo_device *device)
 	}
 
 
-	indigo_release_property( AUX_POWER_OUTLET_PROPERTY );
-	indigo_release_property( X_AUX_VARIABLE_POWER_OUTLET_PROPERTY );
-	//indigo_release_property( AUX_OUTLET_NAMES_PROPERTY );
-	indigo_release_property( PWM_CONFIGURATION_PROPERTY );
-	indigo_release_property( PWM_TEMP_OFFSET_PROPERTY );
-	indigo_release_property( PWM_SWITCHES_PROPERTY );
+	indigo_release_property( AUX_SWITCH_POWER_OUTLETS_PROPERTY );
+	indigo_release_property( AUX_PWM_POWER_OUTLETS_PROPERTY );
+	//indigo_release_property( AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY );
+	indigo_release_property( AUX_PWM_MODES_PROPERTY );
+	indigo_release_property( AUX_PWM_TEMP_OFFSETS_PROPERTY );
+	indigo_release_property( AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY );
 	indigo_release_property( CURRENT_SENSOR_PROPERTY );
 	indigo_release_property( AUX_WEATHER_PROPERTY );
 	indigo_release_property( AUX_INFO_PROPERTY );
 	indigo_release_property( AUX_STATE_PROPERTY );
-	indigo_release_property( ALWAYS_ON_PORT_PROPERTY );		
+	indigo_release_property( AUX_ALWAYS_ON_PORTS_PROPERTY );		
 	pthread_mutex_destroy(&PRIVATE_DATA->mutex);
 	INDIGO_DEVICE_DETACH_LOG(DRIVER_NAME, device->name);
 	return indigo_aux_detach(device);
@@ -1796,14 +1782,14 @@ indigo_result indigo_aux_pbex(indigo_driver_action action, indigo_driver_info *i
 	static indigo_device *aux = NULL;
 
 	static indigo_device aux_template = INDIGO_DEVICE_INITIALIZER(
-		"Powerbox Exxxtreme",
+		"Big Power Box Exxxtreme",
 		aux_attach,
 		aux_enumerate_properties,
 		aux_change_property,
 		NULL,
 		aux_detach);
 
-	SET_DRIVER_INFO(info, "Powerbox Exxxtreme", __FUNCTION__, DRIVER_VERSION, false, last_action);
+	SET_DRIVER_INFO(info, "Big Power Box Exxxtreme", __FUNCTION__, DRIVER_VERSION, false, last_action);
 
 	if (action == last_action)
 		return INDIGO_OK;

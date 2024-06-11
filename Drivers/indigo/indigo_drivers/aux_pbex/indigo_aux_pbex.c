@@ -403,7 +403,7 @@ void SetSwitchValue(indigo_device *device, short id, double value)
 			{
 			case PWM:
 				sprintf(command, ">W:%02d:%d#", id, (int)value);
-
+				deviceFeatures[id].value = (int)value;
 				break;
 			case MODE:
 				sprintf(command, ">C:%02d:%d#", deviceFeatures[id].port - 1, (int)value);
@@ -415,21 +415,19 @@ void SetSwitchValue(indigo_device *device, short id, double value)
 				}
 				else
 				{
-					if ((int)deviceFeatures[deviceFeatures[id].port - 1].value == 1)
-					{
-						deviceFeatures[deviceFeatures[id].port - 1].type = PWM;
-						deviceFeatures[deviceFeatures[id].port - 1].maxvalue = 255;
-						deviceFeatures[deviceFeatures[id].port - 1].value = 255;
-					}
+					deviceFeatures[deviceFeatures[id].port - 1].type = PWM;
+					deviceFeatures[deviceFeatures[id].port - 1].maxvalue = 255;
 				}
 				break;
 			case SETTEMP:
 				sprintf(command, ">T:%02d:%d#", deviceFeatures[id].port - 1, (int)value);
+				deviceFeatures[id].value = (int)value;
 				break;
 			case SWH:
 			case MPX:
 			default:
 				sprintf(command, ">O:%02d#", id);
+				deviceFeatures[id].value = (int)value;
 				break;
 			}
 		}
@@ -439,6 +437,7 @@ void SetSwitchValue(indigo_device *device, short id, double value)
 			{
 			case PWM:
 				sprintf(command, ">W:%02d:0#", id);
+				deviceFeatures[id].value = (int)value;
 				break;
 			case MODE:
 				sprintf(command, ">C:%02d:%d#", deviceFeatures[id].port - 1, (int)value);
@@ -452,6 +451,7 @@ void SetSwitchValue(indigo_device *device, short id, double value)
 			case MPX:
 			default:
 				sprintf(command, ">F:%02d#", id);
+				deviceFeatures[id].value = (int)value;
 				break;
 			}
 		}
@@ -464,7 +464,7 @@ void SetSwitchValue(indigo_device *device, short id, double value)
 
 indigo_result CreateStateItems(indigo_device *device)
 {
-	AUX_STATE_PROPERTY = indigo_init_light_property(NULL, device->name, AUX_POWER_OUTLET_STATE_PROPERTY_NAME, AUX_GROUP, "Power outlets state", INDIGO_OK_STATE, portNum);
+	AUX_STATE_PROPERTY = indigo_init_light_property(NULL, device->name, AUX_POWER_OUTLET_STATE_PROPERTY_NAME, AUX_GROUP, "Power outlet states", INDIGO_OK_STATE, portNum);
 	if (AUX_STATE_PROPERTY == NULL) 
 		return INDIGO_FAILED;
 
@@ -496,13 +496,13 @@ indigo_result UpdateStateItems(indigo_device *device)
 indigo_result CreateCurrentSensorPorts(indigo_device *device){
 
 	AUX_SWITCH_POWER_OUTLETS_PROPERTY = indigo_init_switch_property(NULL,device->name,
-	"SWITCH_PORT_PROPERTY",AUX_GROUP,"Switches",INDIGO_OK_STATE,
+	"SWITCH_PORT_PROPERTY",AUX_GROUP,"Switchable power outlets",INDIGO_OK_STATE,
 	INDIGO_RW_PERM,INDIGO_ANY_OF_MANY_RULE,8);
 	if (AUX_SWITCH_POWER_OUTLETS_PROPERTY == NULL)
 		return INDIGO_FAILED;
 
 	CURRENT_SENSOR_PROPERTY = indigo_init_number_property(NULL, device->name, 
-	"CURRENT_SENSOR_PROPERTY", AUX_GROUP, "Output Gauges", 
+	"CURRENT_SENSOR_PROPERTY", AUX_GROUP, "Output gauges", 
 	INDIGO_OK_STATE, INDIGO_RO_PERM, portNum);
 	if (CURRENT_SENSOR_PROPERTY == NULL)
 			return INDIGO_FAILED;
@@ -515,14 +515,24 @@ indigo_result CreateCurrentSensorPorts(indigo_device *device){
 			return INDIGO_FAILED;
 	
 	AUX_INFO_PROPERTY = indigo_init_number_property(NULL, device->name, AUX_INFO_PROPERTY_NAME, 
-		AUX_GROUP, "Input Gauges", INDIGO_OK_STATE, INDIGO_RO_PERM, 3);
+		AUX_GROUP, "Input gauges", INDIGO_OK_STATE, INDIGO_RO_PERM, 3);
 	if (AUX_INFO_PROPERTY == NULL)
+		return INDIGO_FAILED;
+
+	AUX_PWM_MODES_PROPERTY = indigo_init_number_property(NULL, device->name, "AUX_PWM_MODES_PROPERTY", AUX_GROUP, "PWM outlet modes", INDIGO_OK_STATE, INDIGO_RW_PERM, 4);
+	if (AUX_PWM_MODES_PROPERTY == NULL)
+		return INDIGO_FAILED;
+			
+	AUX_PWM_TEMP_OFFSETS_PROPERTY = indigo_init_number_property(NULL, device->name, "AUX_PWM_TEMP_OFFSETS_PROPERTY", AUX_GROUP, "PWM temperature offsets", INDIGO_OK_STATE, INDIGO_RW_PERM, 4);
+	if (AUX_PWM_TEMP_OFFSETS_PROPERTY == NULL)
 		return INDIGO_FAILED;
 
 	if(!Contains(BoardSignature,"f")) { AUX_WEATHER_PROPERTY->hidden = true; }
 	
 	int index = 0;
 	int nSwitch = 0;
+	int nPWMOffset = 0;
+	int nPWMMode = 0;
 	for(int i = 0; i < nTotalFeatures; i++){
 
 		if(deviceFeatures[i].type == MPX){
@@ -579,6 +589,28 @@ indigo_result CreateCurrentSensorPorts(indigo_device *device){
 
 		indigo_init_number_item(AUX_INFO_POWER_ITEM, AUX_INFO_POWER_ITEM_NAME, 
 			"Power [W]", 0, 200, 0.1, power);
+
+		if (deviceFeatures[i].type == MODE)
+		{
+			char name[50];
+			char label[200];
+			sprintf(name,"AUX_PWM_MODE_ITEM_%d",nPWMMode + 1);
+			sprintf(label,"PWM mode %d\n0: variable, 1:on/off, 2: dew heater, 3: temperature PID",nPWMMode + 1);
+			indigo_init_number_item((AUX_PWM_MODES_PROPERTY->items + nPWMMode),name, 
+			label,0,3,1,deviceFeatures[i].value);
+			nPWMMode++;
+		}	
+		
+		if (deviceFeatures[i].type == SETTEMP)
+		{
+			char name[50];
+			char label[200];
+			sprintf(name,"AUX_PWM_TEMP_OFFSET_ITEM_%d",nPWMOffset + 1);
+			sprintf(label,"PWM temperature offset %d",nPWMMode + 1);
+			indigo_init_number_item((AUX_PWM_TEMP_OFFSETS_PROPERTY->items + nPWMOffset),
+			name, label,0,10,1,deviceFeatures[i].value);
+			nPWMOffset++;
+		}
 	}
 
 	indigo_define_property(device,AUX_SWITCH_POWER_OUTLETS_PROPERTY,NULL);
@@ -589,6 +621,8 @@ indigo_result CreateCurrentSensorPorts(indigo_device *device){
 	indigo_update_property(device,AUX_WEATHER_PROPERTY,NULL);
 	indigo_define_property(device,CURRENT_SENSOR_PROPERTY,NULL);
 	indigo_update_property(device,CURRENT_SENSOR_PROPERTY,NULL);
+	indigo_define_property(device, AUX_PWM_MODES_PROPERTY, NULL);
+	indigo_define_property(device, AUX_PWM_TEMP_OFFSETS_PROPERTY, NULL);
 
 	return INDIGO_OK;
 }
@@ -619,7 +653,7 @@ indigo_result UpdateSwitchItems(indigo_device *device)
 
 	indigo_update_property(device,AUX_SWITCH_POWER_OUTLETS_PROPERTY,NULL);
 }
-indigo_result UpdateCurrentSensorPorts(indigo_device *device)
+indigo_result UpdateDisplayItems(indigo_device *device)
 {
 	QueryDeviceStatus(device);
 	int index = 0;
@@ -694,12 +728,14 @@ indigo_result ReCreatePWMPorts(indigo_device *device)
 
 	if(numVar > 0){
 		if(AUX_PWM_POWER_OUTLETS_PROPERTY == NULL){
-			AUX_PWM_POWER_OUTLETS_PROPERTY = indigo_init_number_property(NULL, device->name, "AUX_PWM_POWER_OUTLETS_PROPERTY", AUX_GROUP, "Variable Voltage Power Outlets", INDIGO_OK_STATE, INDIGO_RW_PERM, numVar);
+			AUX_PWM_POWER_OUTLETS_PROPERTY = indigo_init_number_property(NULL, device->name, "AUX_PWM_POWER_OUTLETS_PROPERTY", AUX_GROUP, "PWM power outlets", INDIGO_OK_STATE, INDIGO_RW_PERM, numVar);
 			if (AUX_PWM_POWER_OUTLETS_PROPERTY == NULL)
 				return INDIGO_FAILED;
-		}else if(AUX_PWM_POWER_OUTLETS_PROPERTY->count != numVar){
+		}else{
 			indigo_delete_property(device, AUX_PWM_POWER_OUTLETS_PROPERTY,NULL);
-			indigo_resize_property(AUX_PWM_POWER_OUTLETS_PROPERTY,numVar);
+			AUX_PWM_POWER_OUTLETS_PROPERTY = indigo_init_number_property(NULL, device->name, "AUX_PWM_POWER_OUTLETS_PROPERTY", AUX_GROUP, "PWM power outlets", INDIGO_OK_STATE, INDIGO_RW_PERM, numVar);
+			if (AUX_PWM_POWER_OUTLETS_PROPERTY == NULL)
+				return INDIGO_FAILED;
 		}
 
 		for(int item = 0; item < numVar; item++){
@@ -709,11 +745,11 @@ indigo_result ReCreatePWMPorts(indigo_device *device)
 			indigo_init_number_item(AUX_PWM_POWER_OUTLETS_PROPERTY->items + item, 
 			name, (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + (var[item]))->text.value, 
 			0, 255, 1, deviceFeatures[var[item]].value);
-		}
-
-		if(!AUX_PWM_POWER_OUTLETS_PROPERTY->defined){
-			indigo_define_property(device,AUX_PWM_POWER_OUTLETS_PROPERTY,NULL);
-		}
+		}		
+		indigo_define_property(device,AUX_PWM_POWER_OUTLETS_PROPERTY,NULL);
+		
+	}else{
+		indigo_delete_property(device, AUX_PWM_POWER_OUTLETS_PROPERTY,NULL);
 	}
 	// PWM switches 
 	//
@@ -724,9 +760,13 @@ indigo_result ReCreatePWMPorts(indigo_device *device)
 			INDIGO_RW_PERM, INDIGO_ANY_OF_MANY_RULE,numSw);
 			if (AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY == NULL)
 				return INDIGO_FAILED;
-		}else if(AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY->count != numSw){
+		}else{
 			indigo_delete_property(device, AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY,NULL);
-			indigo_resize_property(AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY,numSw);
+			AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY = indigo_init_switch_property(NULL, device->name, 
+			"AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY", AUX_GROUP, "PWM Switches", INDIGO_OK_STATE, 
+			INDIGO_RW_PERM, INDIGO_ANY_OF_MANY_RULE,numSw);
+			if (AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY == NULL)
+				return INDIGO_FAILED;
 		}
 	
 		for(int item = 0; item < numSw; item++){
@@ -738,10 +778,10 @@ indigo_result ReCreatePWMPorts(indigo_device *device)
 			name, (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + (sw[item]))->text.value,
 			deviceFeatures[sw[item]].state );
 		}
-
-		if(!AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY->defined){
-			indigo_define_property(device,AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY,NULL);
-		}
+		indigo_define_property(device,AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY,NULL);
+		
+	}else{
+		indigo_delete_property(device, AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY,NULL);
 	}
 	indigo_update_property(device, AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY,NULL);
 	indigo_update_property(device, AUX_PWM_POWER_OUTLETS_PROPERTY, NULL);
@@ -954,8 +994,8 @@ Feature *QueryDeviceDescription(indigo_device *device)
 		features[index].minvalue = 0;
 		features[index].maxvalue = 50.00;
 		features[index].unit = 'A';
-		strcpy(features[index].description, "Input Current Sensor");
-		strcpy(features[index].name, "Input Amps");
+		strcpy(features[index].description, "Input current sensor");
+		strcpy(features[index].name, "Input amps");
 
 		INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceDescription Added INPUT CURRENT port at index: %d",portindex++);
 	}
@@ -970,8 +1010,8 @@ Feature *QueryDeviceDescription(indigo_device *device)
 		features[index].minvalue = 0;
 		features[index].maxvalue = 50.00;
 		features[index].unit = 'V';
-		strcpy(features[index].description, "Input Voltage Sensor");
-		strcpy(features[index].name, "Input Volts");
+		strcpy(features[index].description, "Input voltage sensor");
+		strcpy(features[index].name, "Input volts");
 
 		INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceDescription Added INPUT VOLT port at index: %d",portindex++);
 	}
@@ -1024,8 +1064,8 @@ Feature *QueryDeviceDescription(indigo_device *device)
 		features[index].minvalue = -100.00;
 		features[index].maxvalue = 200.00;
 		features[index].unit = 'C';
-		strcpy(features[index].description, "Environment Temperature Sensor");
-		strcpy(features[index].name, "Env Temperature");
+		strcpy(features[index].description, "Environment temperature sensor");
+		strcpy(features[index].name, "Environment temperature");
 
 		INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceDescription Added ENV TEMP port at index: %d", portindex++);
 		index++;
@@ -1037,8 +1077,8 @@ Feature *QueryDeviceDescription(indigo_device *device)
 		features[index].minvalue = 0;
 		features[index].maxvalue = 100;
 		features[index].unit = '%';
-		strcpy(features[index].description, "Environment Humidity Sensor");
-		strcpy(features[index].name, "Env Humidity");
+		strcpy(features[index].description, "Environment humidity sensor");
+		strcpy(features[index].name, "Environment humidity");
 
 		INDIGO_DRIVER_DEBUG(DRIVER_NAME, "QueryDeviceDescription Added ENV HUMID port at index: %d", portindex++);
 		index++;
@@ -1050,8 +1090,8 @@ Feature *QueryDeviceDescription(indigo_device *device)
 		features[index].minvalue = -100;
 		features[index].maxvalue = 200;
 		features[index].unit = 'C';
-		strcpy(features[index].description, "Environment Dewpoint");
-		strcpy(features[index].name, "Env dewpoint");
+		strcpy(features[index].description, "Environment dewpoint");
+		strcpy(features[index].name, "Environment dewpoint");
 
 		INDIGO_DRIVER_DEBUG(DRIVER_NAME, "QueryDeviceDescription Added ENV DEW port at index: %d", portindex++);
 	}
@@ -1308,50 +1348,28 @@ static indigo_result aux_attach(indigo_device *device)
 		if (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY == NULL)
 			return INDIGO_FAILED;
 
-		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_1, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_1", "Port 1", "Port 1");
-		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_2, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_2", "Port 2", "Port 2");
-		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_3, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_3", "Port 3", "Port 3");
-		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_4, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_4", "Port 4", "Port 4");
-		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_5, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_5", "Port 5", "Port 5");
-		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_6, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_6", "Port 6", "Port 6");
-		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_7, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_7", "Port 7", "Port 7");
-		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_8, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_8", "Port 8", "Port 8");
-		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_9, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_9", "Port 9", "Port 9");
-		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_10, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_10", "Port 10", "Port 10");
-		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_11, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_11", "Port 11", "Port 11");
-		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_12, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_12", "Port 12", "Port 12");
-		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_13, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_13", "Port 13", "Port 13");
-		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_14, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_14", "Port 14", "Port 14");	
-
-		AUX_PWM_MODES_PROPERTY = indigo_init_number_property(NULL, device->name, "AUX_PWM_MODES_PROPERTY", AUX_GROUP, "PWM Modes", INDIGO_OK_STATE, INDIGO_RW_PERM, 4);
-		if (AUX_PWM_MODES_PROPERTY == NULL)
-			return INDIGO_FAILED;
-
-		indigo_init_number_item(AUX_PWM_MODE_ITEM_1,"AUX_PWM_MODE_ITEM_1", 
-		"PWM Mode 1\n0: variable, 1:on/off, 2: dew heater, 3: temperature PID",0,3,1,0);
-		indigo_init_number_item(AUX_PWM_MODE_ITEM_2,"AUX_PWM_MODE_ITEM_2", 
-		"PWM Mode 2\n0: variable, 1:on/off, 2: dew heater, 3: temperature PID",0,3,1,0);
-		indigo_init_number_item(AUX_PWM_MODE_ITEM_3,"AUX_PWM_MODE_ITEM_3", 
-		"PWM Mode 3\n0: variable, 1:on/off, 2: dew heater, 3: temperature PID",0,3,1,0);
-		indigo_init_number_item(AUX_PWM_MODE_ITEM_4,"AUX_PWM_MODE_ITEM_4", 
-		"PWM Mode 4\n0: variable, 1:on/off, 2: dew heater, 3: temperature PID",0,3,1,0);
-		
-		AUX_PWM_TEMP_OFFSETS_PROPERTY = indigo_init_number_property(NULL, device->name, "AUX_PWM_TEMP_OFFSETS_PROPERTY", AUX_GROUP, "PWM Temperature Offset", INDIGO_OK_STATE, INDIGO_RW_PERM, 4);
-		if (AUX_PWM_TEMP_OFFSETS_PROPERTY == NULL)
-			return INDIGO_FAILED;
-
-		indigo_init_number_item(AUX_PWM_TEMP_OFFSET_ITEM_1,"AUX_PWM_TEMP_OFFSET_ITEM_1", "PWM Temperature Offset 1",0,10,1,0);
-		indigo_init_number_item(AUX_PWM_TEMP_OFFSET_ITEM_2,"AUX_PWM_TEMP_OFFSET_ITEM_2", "PWM Temperature Offset 2",0,10,1,0);
-		indigo_init_number_item(AUX_PWM_TEMP_OFFSET_ITEM_3,"AUX_PWM_TEMP_OFFSET_ITEM_3", "PWM Temperature Offset 3",0,10,1,0);
-		indigo_init_number_item(AUX_PWM_TEMP_OFFSET_ITEM_4,"AUX_PWM_TEMP_OFFSET_ITEM_4", "PWM Temperature Offset 4",0,10,1,0);
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_1, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_1", "Switchable power outlet 1", "Switchable power outlet 1");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_2, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_2", "Switchable power outlet 2", "Switchable power outlet 2");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_3, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_3", "Switchable power outlet 3", "Switchable power outlet 3");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_4, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_4", "Switchable power outlet 4", "Switchable power outlet 4");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_5, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_5", "Switchable power outlet 5", "Switchable power outlet 5");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_6, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_6", "Switchable power outlet 6", "Switchable power outlet 6");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_7, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_7", "Switchable power outlet 7", "Switchable power outlet 7");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_8, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_8", "Switchable power outlet 8", "Switchable power outlet 8");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_9, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_9", 	"PWM outlet 1", "PWM outlet 1");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_10, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_10", "PWM outlet 2", "PWM outlet 2");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_11, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_11", "PWM outlet 3", "PWM outlet 3");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_12, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_12", "PWM outlet 4", "PWM outlet 4");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_13, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_13", "Always on power outlet 1", "Always on power outlet 1");
+		indigo_init_text_item(AUX_SWITCH_POWER_OUTLET_NAME_ITEM_14, "AUX_SWITCH_POWER_OUTLET_NAME_ITEM_14", "Always on power outlet 2", "Always on power outlet 2");	
 
 		AUX_ALWAYS_ON_PORTS_PROPERTY = indigo_init_number_property(NULL,device->name,"AUX_ALWAYS_ON_PORTS_PROPERTY", 
-			AUX_GROUP,"Always On Ports",INDIGO_OK_STATE,INDIGO_RO_PERM,2);
+			AUX_GROUP,"Always on power outlets",INDIGO_OK_STATE,INDIGO_RO_PERM,2);
 
 		if (AUX_ALWAYS_ON_PORTS_PROPERTY == NULL)
 			return INDIGO_FAILED;
-		indigo_init_number_item(AUX_ALWAYS_ON_PORTITEM_1,"AUX_ALWAYS_ON_PORTITEM_1","Always On Port 1",255,255,255,255);
-		indigo_init_number_item(AUX_ALWAYS_ON_PORTITEM_2,"AUX_ALWAYS_ON_PORTITEM_2","Always On Port 2",255,255,255,255);
+		indigo_init_number_item(AUX_ALWAYS_ON_PORTITEM_1,"AUX_ALWAYS_ON_PORTITEM_1","Always on power outlet 1",255,255,255,255);
+		indigo_init_number_item(AUX_ALWAYS_ON_PORTITEM_2,"AUX_ALWAYS_ON_PORTITEM_2","Always on power outlet 2",255,255,255,255);
 
 		// -------------------------------------------------------------------------------- DEVICE_PORT, DEVICE_PORTS
 		ADDITIONAL_INSTANCES_PROPERTY->hidden = DEVICE_CONTEXT->base_device != NULL;
@@ -1409,7 +1427,7 @@ static void aux_timer_callback(indigo_device *device)
 		return;
 
 	pthread_mutex_lock(&PRIVATE_DATA->mutex);
-	UpdateCurrentSensorPorts(device);
+	UpdateDisplayItems(device);
 	UpdateStateItems(device);
 	indigo_reschedule_timer(device, 30, &PRIVATE_DATA->aux_timer);
 	pthread_mutex_unlock(&PRIVATE_DATA->mutex);
@@ -1429,8 +1447,6 @@ static void aux_connection_handler(indigo_device *device)
 
 		if (PRIVATE_DATA->handle > 0)
 		{
-			indigo_define_property(device, AUX_PWM_MODES_PROPERTY, NULL);
-			indigo_define_property(device, AUX_PWM_TEMP_OFFSETS_PROPERTY, NULL);
 			indigo_define_property(device, AUX_ALWAYS_ON_PORTS_PROPERTY, NULL);
 			QueryDeviceStatus(device);
 			if (deviceFeatures == NULL)
@@ -1438,10 +1454,11 @@ static void aux_connection_handler(indigo_device *device)
 				deviceFeatures = QueryDeviceDescription(device);
 			}
 			QueryPWMPorts(device);
-			UpdatePWMModeItems(device);
-			ReCreatePWMPorts(device);
+				
 			CreateCurrentSensorPorts(device);
 			CreateStateItems(device);
+			UpdatePWMModeItems(device);
+			ReCreatePWMPorts(device);
 
 			strcpy(INFO_DEVICE_MODEL_ITEM->text.value, deviceName);
 			strcpy(INFO_DEVICE_FW_REVISION_ITEM->text.value, "Unknown");
@@ -1513,10 +1530,9 @@ static void aux_power_outlet_handler(indigo_device *device)
 
 			if (deviceFeatures[i].type == MPX)
 			{
-				if (deviceFeatures[i].value !=
+				if ((bool)deviceFeatures[i].value !=
 					(AUX_SWITCH_POWER_OUTLETS_PROPERTY->items + iNPort)->sw.value)
 				{
-
 					SetSwitchValue(device, i, (AUX_SWITCH_POWER_OUTLETS_PROPERTY->items + iNPort)->sw.value);
 				}
 				iNPort++;
@@ -1544,14 +1560,14 @@ static void aux_pwm_configuration_handler(indigo_device *device)
 	}
 	for(int i = 0; i < AUX_PWM_MODES_PROPERTY->count; i++)
 	{
-		SetSwitchValue(device,index + i,
-		(AUX_PWM_MODES_PROPERTY->items + i)->number.value);
+		if(deviceFeatures[index + i].value != (AUX_PWM_MODES_PROPERTY->items + i)->number.value){
+			SetSwitchValue(device,index + i,
+			(AUX_PWM_MODES_PROPERTY->items + i)->number.value);
+		}
 		// skip temp offset
 		//
 		index++;
 	}
-	
-	QueryDeviceStatus(device);
 	ReCreatePWMPorts(device);
 	indigo_update_property(device, AUX_PWM_MODES_PROPERTY, NULL);
 	pthread_mutex_unlock(&PRIVATE_DATA->mutex);
@@ -1569,13 +1585,37 @@ static void aux_temp_offset_handler(indigo_device *device)
 		{
 			if (deviceFeatures[i].type == SETTEMP)
 			{
-				SetSwitchValue(device, i, (AUX_PWM_TEMP_OFFSETS_PROPERTY->items + iNPort)->number.value);
+				if(deviceFeatures[i].value != (AUX_PWM_TEMP_OFFSETS_PROPERTY->items + iNPort)->number.value){
+					SetSwitchValue(device, i, (AUX_PWM_TEMP_OFFSETS_PROPERTY->items + iNPort)->number.value);
+				}
 				iNPort++;
 			}
 		}
 	}
 	AUX_PWM_TEMP_OFFSETS_PROPERTY->state = INDIGO_OK_STATE;
 	indigo_update_property(device, AUX_PWM_TEMP_OFFSETS_PROPERTY, NULL);
+	pthread_mutex_unlock(&PRIVATE_DATA->mutex);
+}
+
+static void aux_pwm_switch_power_outlet_handler(indigo_device *device)
+{
+	pthread_mutex_lock(&PRIVATE_DATA->mutex);
+	if (deviceFeatures)
+	{
+		int iNPort = 0;
+		for (size_t i = 0; i < portNum; i++)
+		{
+			if (deviceFeatures[i].type == SWH)
+			{
+				if((bool)deviceFeatures[i].value != (AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY->items + iNPort)->sw.value){
+					SetSwitchValue(device, i, (AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY->items + iNPort)->sw.value);
+				}
+				iNPort++;
+			}
+		}
+	}
+	AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY->state = INDIGO_OK_STATE;
+	indigo_update_property(device, AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY, NULL);
 	pthread_mutex_unlock(&PRIVATE_DATA->mutex);
 }
 static void aux_pwm_power_outlet_handler(indigo_device *device)
@@ -1588,7 +1628,9 @@ static void aux_pwm_power_outlet_handler(indigo_device *device)
 		{
 			if (deviceFeatures[i].type == PWM)
 			{
-				SetSwitchValue(device, i, (AUX_PWM_POWER_OUTLETS_PROPERTY->items + iNPort)->number.value);
+				if(deviceFeatures[i].value != (AUX_PWM_POWER_OUTLETS_PROPERTY->items + iNPort)->number.value){
+					SetSwitchValue(device, i, (AUX_PWM_POWER_OUTLETS_PROPERTY->items + iNPort)->number.value);
+				}
 				iNPort++;
 			}
 		}
@@ -1629,7 +1671,13 @@ static indigo_result aux_change_property(indigo_device *device, indigo_client *c
 		indigo_update_property(device, AUX_PWM_POWER_OUTLETS_PROPERTY, NULL);
 		indigo_set_timer(device, 0, aux_pwm_power_outlet_handler, NULL);
 		return INDIGO_OK;
-	} else if (indigo_property_match_changeable(AUX_PWM_MODES_PROPERTY, property)) {
+	}else if (indigo_property_match_changeable(AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY, property)){
+		indigo_property_copy_values(AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY, property, false);
+		AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY->state = INDIGO_BUSY_STATE;
+		indigo_update_property(device, AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY, NULL);
+		indigo_set_timer(device, 0, aux_pwm_switch_power_outlet_handler, NULL);
+		return INDIGO_OK;
+	}else if (indigo_property_match_changeable(AUX_PWM_MODES_PROPERTY, property)) {
 		indigo_property_copy_values(AUX_PWM_MODES_PROPERTY, property, false);
 		AUX_PWM_MODES_PROPERTY->state = INDIGO_BUSY_STATE;
 		indigo_update_property(device, AUX_PWM_MODES_PROPERTY, NULL);

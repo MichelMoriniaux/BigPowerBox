@@ -19,7 +19,7 @@
 // version history
 // 1.0 by Rohan Salodkar <rohan5sep@gmail.com>
 
-/** INDIGO PegasusAstro UPB aux driver
+/** PBEX aux driver
  \file indigo_aux_pbex.h
  */
 
@@ -33,7 +33,7 @@
 extern "C" {
 #endif
 
-/** Register UPB aux hot-plug callback
+/** Register PBEX aux hot-plug callback
  */
 
 extern indigo_result indigo_aux_pbex(indigo_driver_action action, indigo_driver_info *info);
@@ -42,5 +42,5 @@ extern indigo_result indigo_aux_pbex(indigo_driver_action action, indigo_driver_
 }
 #endif
 
-#endif /* aux_upb_h */
+#endif /* aux_pbex_h */
 

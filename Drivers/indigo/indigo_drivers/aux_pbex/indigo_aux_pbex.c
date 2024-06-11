@@ -1313,7 +1313,7 @@ static void pbex_open(indigo_device *device)
 
 				if (strncmp(response, ">POK#", 5) == 0)
 				{
-					INDIGO_DRIVER_ERROR(DRIVER_NAME, "Connected to UPB %s", DEVICE_PORT_ITEM->text.value);
+					INDIGO_DRIVER_ERROR(DRIVER_NAME, "Connected to PBEX %s", DEVICE_PORT_ITEM->text.value);
 					PRIVATE_DATA->version = 1;
 					break;
 				}
@@ -1386,7 +1386,7 @@ static indigo_result aux_attach(indigo_device *device)
 		}
 #endif
 #ifdef INDIGO_LINUX
-		strcpy(DEVICE_PORT_ITEM->text.value, "/dev/ttyUPB");
+		strcpy(DEVICE_PORT_ITEM->text.value, "/dev/ttyPBEX");
 #endif
 		// --------------------------------------------------------------------------------
 		pthread_mutex_init(&PRIVATE_DATA->mutex, NULL);

@@ -19,8 +19,8 @@
 // version history
 // 1.0 by Rohan Salodkar <rohan5sep@gmail.com>
 
-/** INDIGO PegasusAstro UPB aux driver main
- \file indigo_aux_upb_main.c
+/** PBEX aux driver main
+ \file indigo_aux_pbex_main.c
  */
 
 #include <stdio.h>

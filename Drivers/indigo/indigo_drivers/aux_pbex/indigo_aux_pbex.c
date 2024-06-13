@@ -97,7 +97,7 @@ static char portsonly[50];
 #define AUX_PWM_TEMP_OFFSET_ITEM_4					(AUX_PWM_TEMP_OFFSETS_PROPERTY->items + 3)
 
 #define AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY (PRIVATE_DATA->pwm_switches_property)
-#define CURRENT_SENSOR_PROPERTY (PRIVATE_DATA->current_sensor_property)
+#define AUX_CURRENT_SENSOR_PROPERTY (PRIVATE_DATA->current_sensor_property)
 #define AUX_WEATHER_PROPERTY								(PRIVATE_DATA->weather_property)
 #define AUX_WEATHER_TEMPERATURE_ITEM				(AUX_WEATHER_PROPERTY->items + 0)
 #define AUX_WEATHER_HUMIDITY_ITEM						(AUX_WEATHER_PROPERTY->items + 1)
@@ -501,10 +501,10 @@ indigo_result CreateCurrentSensorPorts(indigo_device *device){
 	if (AUX_SWITCH_POWER_OUTLETS_PROPERTY == NULL)
 		return INDIGO_FAILED;
 
-	CURRENT_SENSOR_PROPERTY = indigo_init_number_property(NULL, device->name, 
-	"CURRENT_SENSOR_PROPERTY", AUX_GROUP, "Output gauges", 
+	AUX_CURRENT_SENSOR_PROPERTY = indigo_init_number_property(NULL, device->name, 
+	"AUX_CURRENT_SENSOR_PROPERTY", AUX_GROUP, "Output gauges", 
 	INDIGO_OK_STATE, INDIGO_RO_PERM, portNum);
-	if (CURRENT_SENSOR_PROPERTY == NULL)
+	if (AUX_CURRENT_SENSOR_PROPERTY == NULL)
 			return INDIGO_FAILED;
 
 	AUX_WEATHER_PROPERTY = indigo_init_number_property(NULL, device->name, 
@@ -548,7 +548,7 @@ indigo_result CreateCurrentSensorPorts(indigo_device *device){
 			char label[50];
 			sprintf(name,"CURRENT_SENSOR_%d",index + 1);
 
-			indigo_init_number_item((CURRENT_SENSOR_PROPERTY->items + index),
+			indigo_init_number_item((AUX_CURRENT_SENSOR_PROPERTY->items + index),
 			name,(AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + index)->text.value,deviceFeatures[i].minvalue,
 			deviceFeatures[i].maxvalue,0.1,deviceFeatures[i].value);
 			index++;
@@ -619,8 +619,8 @@ indigo_result CreateCurrentSensorPorts(indigo_device *device){
 	indigo_update_property(device,AUX_INFO_PROPERTY,NULL);
 	indigo_define_property(device,AUX_WEATHER_PROPERTY,NULL);
 	indigo_update_property(device,AUX_WEATHER_PROPERTY,NULL);
-	indigo_define_property(device,CURRENT_SENSOR_PROPERTY,NULL);
-	indigo_update_property(device,CURRENT_SENSOR_PROPERTY,NULL);
+	indigo_define_property(device,AUX_CURRENT_SENSOR_PROPERTY,NULL);
+	indigo_update_property(device,AUX_CURRENT_SENSOR_PROPERTY,NULL);
 	indigo_define_property(device, AUX_PWM_MODES_PROPERTY, NULL);
 	indigo_define_property(device, AUX_PWM_TEMP_OFFSETS_PROPERTY, NULL);
 
@@ -662,7 +662,7 @@ indigo_result UpdateDisplayItems(indigo_device *device)
 	for(int i = 0; i < nTotalFeatures; i++){
 
 		if(deviceFeatures[i].type == CURRENT){
-			(CURRENT_SENSOR_PROPERTY->items + index)->number.value = deviceFeatures[i].value;
+			(AUX_CURRENT_SENSOR_PROPERTY->items + index)->number.value = deviceFeatures[i].value;
 			index++;
 		}
 
@@ -702,7 +702,7 @@ indigo_result UpdateDisplayItems(indigo_device *device)
 	}
 	
 	indigo_update_property(device,AUX_INFO_PROPERTY,NULL);
-	indigo_update_property(device,CURRENT_SENSOR_PROPERTY,NULL);
+	indigo_update_property(device,AUX_CURRENT_SENSOR_PROPERTY,NULL);
 	indigo_update_property(device,AUX_WEATHER_PROPERTY,NULL);
 	indigo_update_property(device,AUX_ALWAYS_ON_PORTS_PROPERTY,NULL);
 	indigo_update_property(device,AUX_PWM_TEMP_OFFSETS_PROPERTY,NULL);
@@ -1413,7 +1413,22 @@ static indigo_result aux_enumerate_properties(indigo_device *device, indigo_clie
 			indigo_define_property(device, AUX_PWM_TEMP_OFFSETS_PROPERTY, NULL);
 
 		if (indigo_property_match(AUX_ALWAYS_ON_PORTS_PROPERTY, property))
-			indigo_define_property(device, AUX_ALWAYS_ON_PORTS_PROPERTY, NULL);		
+			indigo_define_property(device, AUX_ALWAYS_ON_PORTS_PROPERTY, NULL);	
+	
+		if (indigo_property_match(AUX_WEATHER_PROPERTY, property))
+			indigo_define_property(device, AUX_WEATHER_PROPERTY, NULL);		
+		
+		if (indigo_property_match(AUX_INFO_PROPERTY, property))
+			indigo_define_property(device, AUX_INFO_PROPERTY, NULL);
+
+		if (indigo_property_match(AUX_CURRENT_SENSOR_PROPERTY, property))
+			indigo_define_property(device, AUX_CURRENT_SENSOR_PROPERTY, NULL);
+		
+		if (indigo_property_match(AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY, property))
+			indigo_define_property(device, AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY, NULL);
+
+		if (indigo_property_match(AUX_STATE_PROPERTY, property))
+			indigo_define_property(device, AUX_STATE_PROPERTY, NULL);
 
 	}
 	if (indigo_property_match(AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY, property))
@@ -1485,7 +1500,7 @@ static void aux_connection_handler(indigo_device *device)
 		indigo_delete_property(device, AUX_PWM_MODES_PROPERTY, NULL);
 		indigo_delete_property(device, AUX_PWM_TEMP_OFFSETS_PROPERTY, NULL);
 		indigo_delete_property(device, AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY, NULL);
-		indigo_delete_property(device, CURRENT_SENSOR_PROPERTY, NULL);
+		indigo_delete_property(device, AUX_CURRENT_SENSOR_PROPERTY, NULL);
 		indigo_delete_property(device, AUX_WEATHER_PROPERTY, NULL);
 		indigo_delete_property(device, AUX_INFO_PROPERTY, NULL);
 		indigo_delete_property(device, AUX_STATE_PROPERTY, NULL);
@@ -1721,7 +1736,7 @@ static indigo_result aux_change_property(indigo_device *device, indigo_client *c
 				nSW++;
 			}
 
-			snprintf((CURRENT_SENSOR_PROPERTY->items + i)->label, 
+			snprintf((AUX_CURRENT_SENSOR_PROPERTY->items + i)->label, 
 				INDIGO_NAME_SIZE, "%s", (AUX_SWITCH_POWER_OUTLET_NAMES_PROPERTY->items + i)->text.value);
 			
 			for(int i = 0; i < portNum; i++){
@@ -1749,8 +1764,8 @@ static indigo_result aux_change_property(indigo_device *device, indigo_client *c
 				indigo_delete_property(device, AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY, NULL);
 				indigo_define_property(device, AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY, NULL);
 			}
-			indigo_delete_property(device, CURRENT_SENSOR_PROPERTY, NULL);
-			indigo_define_property(device, CURRENT_SENSOR_PROPERTY, NULL);
+			indigo_delete_property(device, AUX_CURRENT_SENSOR_PROPERTY, NULL);
+			indigo_define_property(device, AUX_CURRENT_SENSOR_PROPERTY, NULL);
 			
 			indigo_delete_property(device, AUX_STATE_PROPERTY, NULL);
 			indigo_define_property(device, AUX_STATE_PROPERTY, NULL);
@@ -1785,7 +1800,7 @@ static indigo_result aux_detach(indigo_device *device)
 	indigo_release_property( AUX_PWM_MODES_PROPERTY );
 	indigo_release_property( AUX_PWM_TEMP_OFFSETS_PROPERTY );
 	indigo_release_property( AUX_PWM_SWITCH_POWER_OUTLETS_PROPERTY );
-	indigo_release_property( CURRENT_SENSOR_PROPERTY );
+	indigo_release_property( AUX_CURRENT_SENSOR_PROPERTY );
 	indigo_release_property( AUX_WEATHER_PROPERTY );
 	indigo_release_property( AUX_INFO_PROPERTY );
 	indigo_release_property( AUX_STATE_PROPERTY );

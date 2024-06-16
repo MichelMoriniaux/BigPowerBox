@@ -476,7 +476,7 @@ void SetSwitchValue(indigo_device *device, short id, double value)
 
 indigo_result CreateStateItems(indigo_device *device)
 {
-	AUX_STATE_PROPERTY = indigo_init_light_property(NULL, device->name, AUX_POWER_OUTLET_STATE_PROPERTY_NAME, AUX_GROUP, "Power outlet states", INDIGO_OK_STATE, portNum);
+	AUX_STATE_PROPERTY = indigo_init_light_property(NULL, device->name, AUX_POWER_OUTLET_STATE_PROPERTY_NAME, AUX_GROUP, "Power outlets state", INDIGO_OK_STATE, portNum);
 	if (AUX_STATE_PROPERTY == NULL) 
 		return INDIGO_FAILED;
 
@@ -606,7 +606,7 @@ indigo_result CreateProperties(indigo_device *device){
 			char name[50];
 			char label[200];
 			sprintf(name,"AUX_PWM_MODE_ITEM_%d",nPWMMode + 1);
-			sprintf(label,"PWM mode %d\n0: variable, 1:on/off, 2: dew heater, 3: temperature PID",nPWMMode + 1);
+			sprintf(label,"PWM %d mode\n0: variable, 1:on/off, 2: dew heater, 3: temperature PID",nPWMMode + 1);
 			indigo_init_number_item((AUX_PWM_MODES_PROPERTY->items + nPWMMode),name, 
 			label,0,3,1,deviceFeatures[i].value);
 			nPWMMode++;
@@ -1277,6 +1277,12 @@ int indigo_read_line_local(int handle, char *buffer, int length) {
 				buffer[total_bytes++] = c;
 			else
 				break;
+			// Instead of '\n', this device uses '#' as an end sentinel
+			// do not wait for bytes_read == 0 (end of file) as this is 
+			// very slow. Break as soon as we find '#'
+			//
+			if(c == '#')
+				break;
 		} else if( bytes_read == 0){
 			break;
 		} 
@@ -1456,7 +1462,7 @@ static void aux_timer_callback(indigo_device *device)
 	pthread_mutex_lock(&PRIVATE_DATA->mutex);
 	UpdateDisplayItems(device);
 	UpdateStateItems(device);
-	indigo_reschedule_timer(device, 30, &PRIVATE_DATA->aux_timer);
+	indigo_reschedule_timer(device, UPDATEINTERVAL / 1000, &PRIVATE_DATA->aux_timer);
 	pthread_mutex_unlock(&PRIVATE_DATA->mutex);
 }
 

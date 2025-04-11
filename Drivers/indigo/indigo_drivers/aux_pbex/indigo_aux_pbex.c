@@ -61,6 +61,7 @@ static char portsonly[50];
 #define DEWPOINT 9			// Dewpoint (sensor)
 #define MODE 10				// PWM port mode switch
 #define SETTEMP 11			// PWM port temperature offset switch
+#define PRESSURE 12			// Pressure (sensor)
 #define UPDATEINTERVAL 2000 // how often to update the status
 
 #define PRIVATE_DATA ((pbex_private_data *)device->private_data)
@@ -102,6 +103,7 @@ static char portsonly[50];
 #define AUX_WEATHER_TEMPERATURE_ITEM				(AUX_WEATHER_PROPERTY->items + 0)
 #define AUX_WEATHER_HUMIDITY_ITEM						(AUX_WEATHER_PROPERTY->items + 1)
 #define AUX_WEATHER_DEWPOINT_ITEM						(AUX_WEATHER_PROPERTY->items + 2)
+#define AUX_WEATHER_PRESSURE_ITEM						(AUX_WEATHER_PROPERTY->items + 3)
 
 #define AUX_INFO_PROPERTY										(PRIVATE_DATA->info_property)
 #define AUX_INFO_VOLTAGE_ITEM								(AUX_INFO_PROPERTY->items + 0)
@@ -585,6 +587,12 @@ indigo_result CreateProperties(indigo_device *device){
 			deviceFeatures[i].maxvalue,0.1,deviceFeatures[i].value);
 		}
 
+		if(deviceFeatures[i].type == PRESSURE){
+			indigo_init_number_item(AUX_WEATHER_PRESSURE_ITEM,
+			"AUX_WEATHER_PRESSURE_ITEM_NAME",deviceFeatures[i].name,deviceFeatures[i].minvalue,
+			deviceFeatures[i].maxvalue,0.1,deviceFeatures[i].value);
+		}
+
 		double power = 0.0;
 		if(deviceFeatures[i].type == INPUTA){
 			indigo_init_number_item(AUX_INFO_CURRENT_ITEM, AUX_INFO_CURRENT_ITEM_NAME, 
@@ -693,6 +701,10 @@ indigo_result UpdateDisplayItems(indigo_device *device)
 
 		if(deviceFeatures[i].type == HUMID){
 			AUX_WEATHER_HUMIDITY_ITEM->number.value = deviceFeatures[i].value;
+		}
+
+		if(deviceFeatures[i].type == PRESSURE){
+			AUX_WEATHER_PRESSURE_ITEM->number.value = deviceFeatures[i].value;
 		}
 
 		if(deviceFeatures[i].type == DEWPOINT){
@@ -1107,6 +1119,61 @@ Feature *QueryDeviceDescription(indigo_device *device)
 
 		INDIGO_DRIVER_DEBUG(DRIVER_NAME, "QueryDeviceDescription Added ENV DEW port at index: %d", portindex++);
 	}
+	if (Contains(BoardSignature, "g"))
+	{
+		index++;
+		features[index].canWrite = false;
+		features[index].state = true;
+		features[index].type = TEMP;
+		features[index].port = portNum + 3;
+		features[index].value = 0;
+		features[index].minvalue = -100.00;
+		features[index].maxvalue = 200.00;
+		features[index].unit = 'C';
+		strcpy(features[index].description, "Environment temperature sensor");
+		strcpy(features[index].name, "Environment temperature");
+
+		INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceDescription Added ENV TEMP port at index: %d", portindex++);
+		index++;
+		features[index].canWrite = false;
+		features[index].state = true;
+		features[index].type = HUMID;
+		features[index].port = portNum + 4;
+		features[index].value = 0;
+		features[index].minvalue = 0;
+		features[index].maxvalue = 100;
+		features[index].unit = '%';
+		strcpy(features[index].description, "Environment humidity sensor");
+		strcpy(features[index].name, "Environment humidity");
+
+		INDIGO_DRIVER_DEBUG(DRIVER_NAME, "QueryDeviceDescription Added ENV HUMID port at index: %d", portindex++);
+		index++;
+		features[index].canWrite = false;
+		features[index].state = true;
+		features[index].type = DEWPOINT;
+		features[index].port = portNum + 5;
+		features[index].value = 0;
+		features[index].minvalue = -100;
+		features[index].maxvalue = 200;
+		features[index].unit = 'C';
+		strcpy(features[index].description, "Environment dewpoint");
+		strcpy(features[index].name, "Environment dewpoint");
+
+		INDIGO_DRIVER_DEBUG(DRIVER_NAME, "QueryDeviceDescription Added ENV DEW port at index: %d", portindex++);
+		index++;
+		features[index].canWrite = false;
+		features[index].state = true;
+		features[index].type = PRESSURE;
+		features[index].port = portNum + 6;
+		features[index].value = 0;
+		features[index].minvalue = 0.00;
+		features[index].maxvalue = 2000.00;
+		features[index].unit = 'HPa';
+		strcpy(features[index].description, "Environment pressure sensor");
+		strcpy(features[index].name, "Environment pressure");
+
+		INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceDescription Added ENV PRESSURE port at index: %d", portindex++);
+	}
 	if (Contains(BoardSignature, "t"))
 	{
 		int port = 1;
@@ -1233,6 +1300,26 @@ void QueryDeviceStatus(indigo_device *device)
 				deviceFeatures[p].value = atof(words[index++]);
 				INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceStatus switch %d value %f",p, deviceFeatures[p].value);
 				//  dewpoint
+				deviceFeatures[++p].state = true;
+				deviceFeatures[p].value = atof(words[index++]);
+				INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceStatus switch %d value %f",p, deviceFeatures[p].value);
+				p++;
+			}
+			if (Contains(BoardSignature, "g"))
+			{
+				// temperature
+				deviceFeatures[p].state = true;
+				deviceFeatures[p].value = atof(words[index++]);
+				INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceStatus switch %d value %f",p, deviceFeatures[p].value);
+				//  humidity
+				deviceFeatures[++p].state = true;
+				deviceFeatures[p].value = atof(words[index++]);
+				INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceStatus switch %d value %f",p, deviceFeatures[p].value);
+				//  dewpoint
+				deviceFeatures[++p].state = true;
+				deviceFeatures[p].value = atof(words[index++]);
+				INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceStatus switch %d value %f",p, deviceFeatures[p].value);
+				//  Pressure
 				deviceFeatures[++p].state = true;
 				deviceFeatures[p].value = atof(words[index++]);
 				INDIGO_DRIVER_DEBUG(DRIVER_NAME,"QueryDeviceStatus switch %d value %f",p, deviceFeatures[p].value);

@@ -15,6 +15,7 @@
 #include <Adafruit_SHT31.h>             // for SHT3x sensor attached to RJ12 port
 #include <SparkFun_I2C_Mux_Arduino_Library.h>
 #include <Adafruit_AHTX0.h>
+#include <Adafruit_BME280.h>
 #include <PIDController.h>
 
 #ifdef DEBUG
@@ -23,6 +24,7 @@
 
 Adafruit_MCP23X17 mcp;
 Adafruit_SHT31 sht31 = Adafruit_SHT31();
+Adafruit_BME280 bme;
 QWIICMUX imux;
 Adafruit_AHTX0 aht10;
 PIDController pid[4];   // up to 4 pid controllers, one for each PWM port
@@ -58,7 +60,8 @@ int currentConfAddr = 0;                  // EEPROM address of the current valid
 int portIndex = 0;                        // index of the current port being measured
 int portMax;                              // number of ports
 int idx = 0;                              // index into the command string
-bool haveTemp;                                 // stores whether the SHT sensor was found (true)
+bool haveTemp;                            // stores whether the SHT sensor was found (true)
+bool havePress = false;                   // only for BME280
 bool dsel = true;                         // we start with dsel HIGH for port 1
 int chip = 0;                             // chip index being measured
 // time
@@ -272,6 +275,13 @@ void getStatusString() {
     status += ":";
     // dewpoint
     status += powerBoxStatus.dewpoint;
+    // pressure
+    if (havePress) {
+      status += powerBoxStatus.pressure;
+      status += ":";
+    } else {
+      status += "::";
+    }
     for ( int i = 1; i < probeCount ; i++ ) {
       status += ":";
       // temperature
@@ -491,6 +501,8 @@ void discoverProbes(int muxPort) {
   bool skip_44 = false;
   bool skip_45 = false;
   bool skip_10 = false;
+  bool skip_76 = false;
+  bool skip_77 = false;
 
   // determine if we need to skip some discoveries (eg. skip the non muxed probes already found)
   if (muxPort != 255) {
@@ -500,6 +512,8 @@ void discoverProbes(int muxPort) {
         if (powerBoxStatus.tempProbeType[probe] == SHT31_0x44) { skip_44 = true; }
         if (powerBoxStatus.tempProbeType[probe] == SHT31_0x45) { skip_45 = true; }
         if (powerBoxStatus.tempProbeType[probe] == AHT10) { skip_10 = true; }
+        if (powerBoxStatus.tempProbeType[probe] == BME280_0x76) { skip_76 = true; }
+        if (powerBoxStatus.tempProbeType[probe] == BME280_0x77) { skip_77 = true; }
       }
     }
   }
@@ -555,6 +569,41 @@ void discoverProbes(int muxPort) {
       haveTemp = true;
       powerBoxStatus.tempProbePort[probeCount] = muxPort;
       powerBoxStatus.tempProbeType[probeCount++] = AHT10;
+      probeFound = false;
+    }
+
+  // check for BME280 at address 0x76 (SDO pulled to GND)
+  // the BME280 does humidity pressure and temp
+  // if we have this one as native (muxPort = 255) we cannot have one muxed so lets check if we should skip it
+  if (!skip_76) {
+    probeFound = bme.begin(0x76);
+    if (probeFound) {
+      DPRINTLN(F("found BME280_76 Temp/Humid monitor"));
+      if (probeCount > 0)
+        boardSignature += 't';
+      else
+        boardSignature += 'g';
+      haveTemp = true;
+      havePress = true;
+      powerBoxStatus.tempProbePort[probeCount] = muxPort;
+      powerBoxStatus.tempProbeType[probeCount++] = BME280_0x76;
+      probeFound = false;
+    }
+  // check for BME280 at address 0x77 (native)
+  // the BME280 does humidity pressure and temp
+  // if we have this one as native (muxPort = 255) we cannot have one muxed so lets check if we should skip it
+  if (!skip_77) {
+    probeFound = bme.begin(0x77);
+    if (probeFound) {
+      DPRINTLN(F("found BME280_76 Temp/Humid monitor"));
+      if (probeCount > 0)
+        boardSignature += 't';
+      else
+        boardSignature += 'g';
+      haveTemp = true;
+      havePress = true;
+      powerBoxStatus.tempProbePort[probeCount] = muxPort;
+      powerBoxStatus.tempProbeType[probeCount++] = BME280_0x76;
       probeFound = false;
     }
   }
@@ -725,7 +774,7 @@ void setup() {
     DPRINTLN(F(" Done"));
   }
   
-  // now lets look for non=muxed sht31 or AHT10 probe, if we find one this will be our refence environmental probe
+  // now lets look for non=muxed sht31, bme280 or AHT10 probe, if we find one this will be our refence environmental probe
   // note: if we find an AHT probe at this stage we cannot have anymore multiplexed as they only have one address
   // same-ish goes for SHT31.So possible setups is an SHT31 and multiple AHT10s on the mux or an AHT10 and multiple 
   // SHT31s on the mux or even simpler: every probe on the mux
@@ -913,6 +962,18 @@ void loop() {
               powerBoxStatus.temp = temp.temperature;
               powerBoxStatus.humid = humid.relative_humidity;
               break;
+            case BME280_0X76:
+              bme.begin(0x76);
+              powerBoxStatus.temp = bme.readTemperature();
+              powerBoxStatus.humid = bme.readHumidity();
+              powerBoxStatus.pressure = bme.readPressure()
+              break;
+            case BME280_0X77:
+              bme.begin(0x77);
+              powerBoxStatus.temp = bme.readTemperature();
+              powerBoxStatus.humid = bme.readHumidity();
+              powerBoxStatus.pressure = bme.readPressure()
+              break;
           }
           powerBoxStatus.tempProbe[0] = powerBoxStatus.temp;
           powerBoxStatus.dewpoint = powerBoxStatus.temp - ((100 - powerBoxStatus.humid) / 5);
@@ -934,6 +995,14 @@ void loop() {
                 sensors_event_t humid;
                 aht10.getEvent(&humid, &temp);
                 powerBoxStatus.tempProbe[i] = temp.temperature;
+                break;
+              case BME280_0X76:
+                sht31.begin(0x76);
+                powerBoxStatus.tempProbe[i] = bme.readTemperature();
+                break;
+              case BME280_0X77:
+                sht31.begin(0x77);
+                powerBoxStatus.tempProbe[i] = bme.readTemperature();
                 break;
             }
           }

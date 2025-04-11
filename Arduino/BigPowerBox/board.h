@@ -18,6 +18,7 @@
 //  t: temperature probe
 //  h: humidity probe
 //  f: temp + humidity probe
+//  g: temp + humid + press probe
 // always-on ports always last followed by t then h
 String boardSignature = "mmmmmmmmppppaa";
 // status string
@@ -68,6 +69,7 @@ struct status_t {
     float temp;
     float humid;
     float dewpoint;
+    float pressure;
     float tempProbe[5];                   // tempearture reading in C.
     byte  tempProbePort[5];               // i2c muc port on which the probe is found, 255 is used for non mux.
     byte  tempProbeType[5];               // type of probe found. limit them to 5 more would be overkill, like 640k RAM
@@ -148,7 +150,9 @@ const byte port2bin[8] = {PORT1ON, PORT2ON, PORT3ON, PORT4ON, PORT5ON, PORT6ON, 
 // temperature / Humidity Probe Ids
 #define SHT31_0x44          1
 #define SHT31_0x45          2
-#define AHT10               3 
+#define AHT10               3
+#define BME280_0x77         4
+#define BME280_0X76         5
 
 // Storage management
 #define EEPROMNAMEBASE      0             // Base address of the port name config struct in EEPROM

@@ -79,6 +79,7 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
         private const short DEWPOINT = 9;               // Dewpoint (sensor)
         private const short MODE = 10;                  // PWM port mode switch
         private const short SETTEMP = 11;               // PWM port temperature offset switch
+        private const short PRESSURE = 12;              // Pressure port type (sensor)
         private const int UPDATEINTERVAL = 2000;        // how often to update the status
 
         class Feature_c
@@ -1107,6 +1108,26 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                         tl.LogMessage("SH.QueryDeviceStatus", "switch " + p + " value " + deviceFeatures[p].value);
                         p++;
                     }
+                    if (BoardSignature.Contains("g"))
+                    {
+                        // temperature
+                        deviceFeatures[p].state = true;
+                        deviceFeatures[p].value = Convert.ToDouble(words[index++]);
+                        tl.LogMessage("SH.QueryDeviceStatus", "switch " + p + " value " + deviceFeatures[p].value);
+                        // humidity
+                        deviceFeatures[++p].state = true;
+                        deviceFeatures[p].value = Convert.ToDouble(words[index++]);
+                        tl.LogMessage("SH.QueryDeviceStatus", "switch " + p + " value " + deviceFeatures[p].value);
+                        // dewpoint
+                        deviceFeatures[++p].state = true;
+                        deviceFeatures[p].value = Convert.ToDouble(words[index++]);
+                        tl.LogMessage("SH.QueryDeviceStatus", "switch " + p + " value " + deviceFeatures[p].value);
+                        // pressure
+                        deviceFeatures[++p].state = true;
+                        deviceFeatures[p].value = Convert.ToDouble(words[index++]);
+                        tl.LogMessage("SH.QueryDeviceStatus", "switch " + p + " value " + deviceFeatures[p].value);
+                        p++;
+                    }
                     if (BoardSignature.Contains("t"))
                     {
                         int i = BoardSignature.IndexOf('t');
@@ -1369,6 +1390,61 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                 feature3.name = "Env dewpoint";
                 deviceFeatures.Add(feature3);
                 tl.LogMessage("SH.QueryDeviceDescription", "Added ENV DEW port at index: " + portindex++);
+            }
+            if (BoardSignature.Contains("g"))
+            {
+                Feature_c feature = new Feature_c();
+                feature.canWrite = false;
+                feature.state = true;
+                feature.type = TEMP;
+                feature.port = portNum + 3;
+                feature.value = 0;
+                feature.minvalue = -100.00;
+                feature.maxvalue = 200.00;
+                feature.unit = "C";
+                feature.description = "Environment Temperature Sensor";
+                feature.name = "Env Temperature";
+                deviceFeatures.Add(feature);
+                tl.LogMessage("SH.QueryDeviceDescription", "Added ENV TEMP port at index: " + portindex++);
+                Feature_c feature2 = new Feature_c();
+                feature2.canWrite = false;
+                feature2.state = true;
+                feature2.type = HUMID;
+                feature2.port = portNum + 4;
+                feature2.value = 0;
+                feature2.minvalue = 0;
+                feature2.maxvalue = 100;
+                feature2.unit = "%";
+                feature2.description = "Environment Humidity Sensor";
+                feature2.name = "Env Humidity";
+                deviceFeatures.Add(feature2);
+                tl.LogMessage("SH.QueryDeviceDescription", "Added ENV HUMID port at index: " + portindex++);
+                Feature_c feature3 = new Feature_c();
+                feature3.canWrite = false;
+                feature3.state = true;
+                feature3.type = DEWPOINT;
+                feature3.port = portNum + 5;
+                feature3.value = 0;
+                feature3.minvalue = -100;
+                feature3.maxvalue = 200;
+                feature3.unit = "C";
+                feature3.description = "Environment Dewpoint";
+                feature3.name = "Env dewpoint";
+                deviceFeatures.Add(feature3);
+                tl.LogMessage("SH.QueryDeviceDescription", "Added ENV DEW port at index: " + portindex++);
+                Feature_c feature4 = new Feature_c();
+                feature4.canWrite = false;
+                feature4.state = true;
+                feature4.type = PRESSURE;
+                feature4.port = portNum + 6;
+                feature4.value = 0;
+                feature4.minvalue = 0.00;
+                feature4.maxvalue = 2000.00;
+                feature4.unit = "HPa";
+                feature4.description = "Environment Pressure Sensor";
+                feature4.name = "Env Pressure";
+                deviceFeatures.Add(feature4);
+                tl.LogMessage("SH.QueryDeviceDescription", "Added ENV PRESSURE port at index: " + portindex++);
             }
             if (BoardSignature.Contains("t"))
             {

@@ -571,7 +571,7 @@ void discoverProbes(int muxPort) {
       powerBoxStatus.tempProbeType[probeCount++] = AHT10;
       probeFound = false;
     }
-
+  }
   // check for BME280 at address 0x76 (SDO pulled to GND)
   // the BME280 does humidity pressure and temp
   // if we have this one as native (muxPort = 255) we cannot have one muxed so lets check if we should skip it
@@ -589,6 +589,7 @@ void discoverProbes(int muxPort) {
       powerBoxStatus.tempProbeType[probeCount++] = BME280_0x76;
       probeFound = false;
     }
+  }
   // check for BME280 at address 0x77 (native)
   // the BME280 does humidity pressure and temp
   // if we have this one as native (muxPort = 255) we cannot have one muxed so lets check if we should skip it
@@ -603,7 +604,7 @@ void discoverProbes(int muxPort) {
       haveTemp = true;
       havePress = true;
       powerBoxStatus.tempProbePort[probeCount] = muxPort;
-      powerBoxStatus.tempProbeType[probeCount++] = BME280_0x76;
+      powerBoxStatus.tempProbeType[probeCount++] = BME280_0x77;
       probeFound = false;
     }
   }
@@ -962,17 +963,17 @@ void loop() {
               powerBoxStatus.temp = temp.temperature;
               powerBoxStatus.humid = humid.relative_humidity;
               break;
-            case BME280_0X76:
+            case BME280_0x76:
               bme.begin(0x76);
               powerBoxStatus.temp = bme.readTemperature();
               powerBoxStatus.humid = bme.readHumidity();
-              powerBoxStatus.pressure = bme.readPressure()
+              powerBoxStatus.pressure = bme.readPressure();
               break;
-            case BME280_0X77:
+            case BME280_0x77:
               bme.begin(0x77);
               powerBoxStatus.temp = bme.readTemperature();
               powerBoxStatus.humid = bme.readHumidity();
-              powerBoxStatus.pressure = bme.readPressure()
+              powerBoxStatus.pressure = bme.readPressure();
               break;
           }
           powerBoxStatus.tempProbe[0] = powerBoxStatus.temp;
@@ -996,11 +997,11 @@ void loop() {
                 aht10.getEvent(&humid, &temp);
                 powerBoxStatus.tempProbe[i] = temp.temperature;
                 break;
-              case BME280_0X76:
+              case BME280_0x76:
                 sht31.begin(0x76);
                 powerBoxStatus.tempProbe[i] = bme.readTemperature();
                 break;
-              case BME280_0X77:
+              case BME280_0x77:
                 sht31.begin(0x77);
                 powerBoxStatus.tempProbe[i] = bme.readTemperature();
                 break;

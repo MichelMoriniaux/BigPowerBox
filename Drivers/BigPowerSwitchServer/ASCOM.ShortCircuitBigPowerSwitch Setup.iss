@@ -5,8 +5,8 @@
 [Setup]
 AppID={{c3224456-eeb4-4602-ba85-b0c88fcc674c}
 AppName=ASCOM ASCOM.ShortCircuitBigPowerSwitch Switch Driver
-AppVerName=ASCOM ASCOM.ShortCircuitBigPowerSwitch Switch Driver 0.1.0
-AppVersion=0.1.0
+AppVerName=ASCOM ASCOM.ShortCircuitBigPowerSwitch Switch Driver 0.1.1
+AppVersion=0.1.1
 AppPublisher=Michel Moriniaux <michel.moriniaux+BPS@gmail.com>
 AppPublisherURL=mailto:michel.moriniaux+BPS@gmail.com
 AppSupportURL=https://ascomtalk.groups.io/g/Help
@@ -34,9 +34,9 @@ Name: "{cf}\ASCOM\Uninstall\Switch\ASCOM.ShortCircuitBigPowerSwitch"
 ; TODO: Add subfolders below {app} as needed (e.g. Name: "{app}\MyFolder")
 
 [Files]
-Source: "C:\Users\Mitch\source\repos\BigPowerSwitchServer\bin\Release\ASCOM.ShortCircuitBigPowerSwitch.exe"; DestDir: "{app}" ;AfterInstall: RegASCOM()
+Source: "C:\Users\Mitch\OneDrive\Documents\GitHub\BigPowerBox\Drivers\BigPowerSwitchServer\bin\Release\ASCOM.ShortCircuitBigPowerSwitch.exe"; DestDir: "{app}" ;AfterInstall: RegASCOM()
 ; Require a read-me HTML to appear after installation, maybe driver's Help doc
-Source: "C:\Users\Mitch\source\repos\BigPowerSwitchServer\readme.txt"; DestDir: "{app}"; Flags: isreadme
+Source: "C:\Users\Mitch\OneDrive\Documents\GitHub\BigPowerBox\Drivers\BigPowerSwitchServer\README.MD"; DestDir: "{app}"; Flags: isreadme
 ; TODO: Add other files needed by your driver here (add subfolders above)
 
 ;Only if COM Local Server

@@ -152,7 +152,7 @@ const byte port2bin[8] = {PORT1ON, PORT2ON, PORT3ON, PORT4ON, PORT5ON, PORT6ON, 
 #define SHT31_0x45          2
 #define AHT10               3
 #define BME280_0x77         4
-#define BME280_0X76         5
+#define BME280_0x76         5
 
 // Storage management
 #define EEPROMNAMEBASE      0             // Base address of the port name config struct in EEPROM

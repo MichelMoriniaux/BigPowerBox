@@ -5,8 +5,8 @@
 [Setup]
 AppID={{c3224456-eeb4-4602-ba85-b0c88fcc674c}
 AppName=ASCOM ASCOM.ShortCircuitBigPowerSwitch Switch Driver
-AppVerName=ASCOM ASCOM.ShortCircuitBigPowerSwitch Switch Driver 0.1.1
-AppVersion=0.1.1
+AppVerName=ASCOM ASCOM.ShortCircuitBigPowerSwitch Switch Driver 0.1.3
+AppVersion=0.1.3
 AppPublisher=Michel Moriniaux <michel.moriniaux+BPS@gmail.com>
 AppPublisherURL=mailto:michel.moriniaux+BPS@gmail.com
 AppSupportURL=https://ascomtalk.groups.io/g/Help

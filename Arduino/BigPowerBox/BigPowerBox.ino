@@ -34,7 +34,7 @@ int memfree = 0;
 int prevmemfree = 0;
 
 const String programName = "BigPowerBox";
-const String programVersion = "004";
+const String programVersion = "013";
 const String programAuthor = "Michel Moriniaux";
 
 struct config_t powerBoxConf;

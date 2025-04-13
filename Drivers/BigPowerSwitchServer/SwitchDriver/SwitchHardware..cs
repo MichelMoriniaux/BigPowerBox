@@ -96,7 +96,7 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
             public string name;
         };                                              // internal status of a port class
         private static List<Feature_c> deviceFeatures;  // list of ports to store their status
-        private static int portNum;                     // number of physical electrical ports
+        internal static int portNum;                     // number of physical electrical ports
         private static bool havePWM = false;            // do we have PWM ports in the port list
         public class fakePort_c
         {
@@ -219,6 +219,11 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                     {
                         CopyNamesToDevice();
                         updateNames = false;
+                        // We may have connected to update the ports make sure we disconnect from the device before closing the dialog
+                        if (IsConnected)
+                        {
+                            Connected = false;
+                        }
                     }
                 }
             }
@@ -623,7 +628,13 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                 return;
             }
             if (id < portNum)
+            {
+                if (!IsConnected)
+                {
+                    Connected = true;
+                }
                 CommandString(string.Format(">M:{0, 0:D2}:{1}#", id, name), false);
+            }
             deviceFeatures[id].name = name;
             deviceFeatures[id + portNum].name = name + " Current (A)";
             tl.LogMessage("SH.SetSwitchName", $"SetSwitchName({id}) = {name}");
@@ -1039,6 +1050,7 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                     // populate the deviceFeatures List with the status values
                     string switchPortsOnly = BoardSignature.Replace("t", string.Empty);
                     switchPortsOnly = switchPortsOnly.Replace("f", string.Empty);
+                    switchPortsOnly = switchPortsOnly.Replace("g", string.Empty);
                     // first iterate through the ports to update the port values (OFF/ON/dutycycle level)
                     int index = 1;
                     for (int i = 0; i < switchPortsOnly.Length; i++)
@@ -1092,6 +1104,7 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
                     }
                     // and finaly the temp and humid sensors if they are present in the board signature
                     // the board will report 'f' and 't' only if an SHT31 or AHT10 sensor is attached at power-on
+                    // 'g' if a bme280 is attached
                     if (BoardSignature.Contains("f"))
                     {
                         // temperature
@@ -1185,6 +1198,7 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
             // first create a new string without temps and humid
             string portsonly = BoardSignature.Replace("t", string.Empty);
             portsonly = portsonly.Replace("f", string.Empty);
+            portsonly = portsonly.Replace("g", string.Empty);
             portNum = portsonly.Length;
             tl.LogMessage("SH.QueryDeviceDescription", "got portsOnly: " + portsonly);
             int switchable = 1;

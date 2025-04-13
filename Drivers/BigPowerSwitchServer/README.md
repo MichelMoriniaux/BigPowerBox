@@ -30,8 +30,9 @@ You can now configure the PWM ports into 4 modes:
 
 
 # Installing the driver 
-Downlad the installer from the [realeases](https://github.com/MichelMoriniaux/BigPowerBox/releases) tab and run it, it should register the server and make the driver available in the ASCOM choser. 
+Downlad the installer from the [releases](https://github.com/MichelMoriniaux/BigPowerBox/releases) tab and run it, it should register the server and make the driver available in the ASCOM choser. 
 
 # Building the driver
 Open the solution in Visual Studio 2022 and press `CTRL+B` the driver should build.  
 Open a command prompt and run the local server exe `ASCOM.ShortCircuitBigPowerSwitch.exe` with the `/regserver` parameter (requires admin privileges), which will create the entry that appears in the ASCOM Chooser. This registration only needs to be done once on each PC. Use the `/unregserver` parameter to unregister the server when no longer required. Never use `REGASM` on the local server executable.
+Even better modify the included .iss file to match your paths and compile your own installer, .iss files are used with Inno Setup Compiler

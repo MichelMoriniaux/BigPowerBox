@@ -34,7 +34,7 @@ int memfree = 0;
 int prevmemfree = 0;
 
 const String programName = "BigPowerBox";
-const String programVersion = "003";
+const String programVersion = "004";
 const String programAuthor = "Michel Moriniaux";
 
 struct config_t powerBoxConf;
@@ -277,10 +277,8 @@ void getStatusString() {
     status += powerBoxStatus.dewpoint;
     // pressure
     if (havePress) {
-      status += powerBoxStatus.pressure;
       status += ":";
-    } else {
-      status += "::";
+      status += powerBoxStatus.pressure;
     }
     for ( int i = 1; i < probeCount ; i++ ) {
       status += ":";
@@ -518,67 +516,16 @@ void discoverProbes(int muxPort) {
     }
   }
 
-  // check for SHT3x sensor
-  // the SHT3x is much more precise and reliable than the AHT10 but is also MUCH more expensive ~8$
   // we check for these first as we use the first sensor found as the reference sensor, all subsequent sensors
   // are used only for temperature for PWM dew heater feedback
 
-  // if we have this one as native (muxPort = 255) we cannot have one muxed so lets check if we should skip it
-  if (!skip_44) {
-    probeFound = sht31.begin(0x44);
-    if (probeFound) {
-      DPRINTLN(F("Found SHT3x_44 Temp/Humid monitor"));
-      if (probeCount > 0)
-        boardSignature += 't';
-      else
-        boardSignature += 'f';
-      haveTemp = true;
-      powerBoxStatus.tempProbePort[probeCount] = muxPort;
-      powerBoxStatus.tempProbeType[probeCount++] = SHT31_0x44;
-      probeFound = false;
-    }
-  }
-  // check for an SHT3x at the other address
-  // if we have this one as native (muxPort = 255) we cannot have one muxed so lets check if we should skip it
-  if (!skip_45) {
-    probeFound = sht31.begin(0x45); // 0x45 is an alternate address for the SHT31
-    if (probeFound) {
-      DPRINTLN(F("Found SHT3x_45 Temp/Humid monitor"));
-      if (probeCount > 0)
-        boardSignature += 't';
-      else
-        boardSignature += 'f';
-      haveTemp = true;
-      powerBoxStatus.tempProbePort[probeCount] = muxPort;
-      powerBoxStatus.tempProbeType[probeCount++] = SHT31_0x45;
-      probeFound = false;
-    }
-  }
-
-  // check for AHT10
-  // the AHT10 is cheap ~1$ but less reliable
-  // if we have this one as native (muxPort = 255) we cannot have one muxed so lets check if we should skip it
-  if (!skip_10) {
-    probeFound = aht10.begin();
-    if (probeFound) {
-      DPRINTLN(F("found AHT10 Temp/Humid monitor"));
-      if (probeCount > 0)
-        boardSignature += 't';
-      else
-        boardSignature += 'f';
-      haveTemp = true;
-      powerBoxStatus.tempProbePort[probeCount] = muxPort;
-      powerBoxStatus.tempProbeType[probeCount++] = AHT10;
-      probeFound = false;
-    }
-  }
   // check for BME280 at address 0x76 (SDO pulled to GND)
   // the BME280 does humidity pressure and temp
   // if we have this one as native (muxPort = 255) we cannot have one muxed so lets check if we should skip it
   if (!skip_76) {
     probeFound = bme.begin(0x76);
     if (probeFound) {
-      DPRINTLN(F("found BME280_76 Temp/Humid monitor"));
+      DPRINTLN(F("found BME280_76"));
       if (probeCount > 0)
         boardSignature += 't';
       else
@@ -596,7 +543,7 @@ void discoverProbes(int muxPort) {
   if (!skip_77) {
     probeFound = bme.begin(0x77);
     if (probeFound) {
-      DPRINTLN(F("found BME280_76 Temp/Humid monitor"));
+      DPRINTLN(F("found BME280_76"));
       if (probeCount > 0)
         boardSignature += 't';
       else
@@ -605,6 +552,58 @@ void discoverProbes(int muxPort) {
       havePress = true;
       powerBoxStatus.tempProbePort[probeCount] = muxPort;
       powerBoxStatus.tempProbeType[probeCount++] = BME280_0x77;
+      probeFound = false;
+    }
+  }
+
+  // check for SHT3x sensor
+  // the SHT3x is much more precise and reliable than the AHT10 but is also MUCH more expensive ~8$
+  // if we have this one as native (muxPort = 255) we cannot have one muxed so lets check if we should skip it
+  if (!skip_44) {
+    probeFound = sht31.begin(0x44);
+    if (probeFound) {
+      DPRINTLN(F("Found SHT3x_44"));
+      if (probeCount > 0)
+        boardSignature += 't';
+      else
+        boardSignature += 'f';
+      haveTemp = true;
+      powerBoxStatus.tempProbePort[probeCount] = muxPort;
+      powerBoxStatus.tempProbeType[probeCount++] = SHT31_0x44;
+      probeFound = false;
+    }
+  }
+  // check for an SHT3x at the other address
+  // if we have this one as native (muxPort = 255) we cannot have one muxed so lets check if we should skip it
+  if (!skip_45) {
+    probeFound = sht31.begin(0x45); // 0x45 is an alternate address for the SHT31
+    if (probeFound) {
+      DPRINTLN(F("Found SHT3x_45"));
+      if (probeCount > 0)
+        boardSignature += 't';
+      else
+        boardSignature += 'f';
+      haveTemp = true;
+      powerBoxStatus.tempProbePort[probeCount] = muxPort;
+      powerBoxStatus.tempProbeType[probeCount++] = SHT31_0x45;
+      probeFound = false;
+    }
+  }
+
+  // check for AHT10
+  // the AHT10 is cheap ~1$ but less reliable
+  // if we have this one as native (muxPort = 255) we cannot have one muxed so lets check if we should skip it
+  if (!skip_10) {
+    probeFound = aht10.begin();
+    if (probeFound) {
+      DPRINTLN(F("found AHT10"));
+      if (probeCount > 0)
+        boardSignature += 't';
+      else
+        boardSignature += 'f';
+      haveTemp = true;
+      powerBoxStatus.tempProbePort[probeCount] = muxPort;
+      powerBoxStatus.tempProbeType[probeCount++] = AHT10;
       probeFound = false;
     }
   }
@@ -631,7 +630,7 @@ void processSerialCommand() {
   receiveString = String(pop());
   char cmd = receiveString[0];
   #ifdef DEBUG
-  DPRINT(F("- receive string="));
+  DPRINT(F("- rcv str="));
   DPRINTLN(receiveString);
   DPRINT(F("- cmd="));
   DPRINTLN(cmd);
@@ -671,7 +670,7 @@ void processSerialCommand() {
       DPRINT(F("- port="));
       DPRINTLN(port);
       optionString = receiveString.substring(receiveString.indexOf(":",3) + 1, receiveString.length());
-      DPRINT(F("- workstring="));
+      DPRINT(F("- workstr="));
       DPRINTLN(optionString);
       writeNameToEEPROM(port, optionString);
       sendPacket(">MOK#");
@@ -840,7 +839,7 @@ void setup() {
   for ( int addr=EEPROMCONFBASE; addr < EEPROM.length(); addr = addr + sizeof(config_t)) {
     EEPROM.get(addr, powerBoxConf);
     if ( powerBoxConf.currentData == CURRENTCONFIGFLAG ) {
-      DPRINT(F("- Found Valid config at="));
+      DPRINT(F("- Valid config at="));
       DPRINTLN(addr);
       found = true;
       currentConfAddr = addr;
@@ -967,13 +966,13 @@ void loop() {
               bme.begin(0x76);
               powerBoxStatus.temp = bme.readTemperature();
               powerBoxStatus.humid = bme.readHumidity();
-              powerBoxStatus.pressure = bme.readPressure();
+              powerBoxStatus.pressure = bme.readPressure() / 100.00F;
               break;
             case BME280_0x77:
               bme.begin(0x77);
               powerBoxStatus.temp = bme.readTemperature();
               powerBoxStatus.humid = bme.readHumidity();
-              powerBoxStatus.pressure = bme.readPressure();
+              powerBoxStatus.pressure = bme.readPressure() / 100.00F;
               break;
           }
           powerBoxStatus.tempProbe[0] = powerBoxStatus.temp;
@@ -998,11 +997,11 @@ void loop() {
                 powerBoxStatus.tempProbe[i] = temp.temperature;
                 break;
               case BME280_0x76:
-                sht31.begin(0x76);
+                bme.begin(0x76);
                 powerBoxStatus.tempProbe[i] = bme.readTemperature();
                 break;
               case BME280_0x77:
-                sht31.begin(0x77);
+                bme.begin(0x77);
                 powerBoxStatus.tempProbe[i] = bme.readTemperature();
                 break;
             }

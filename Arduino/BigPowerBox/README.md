@@ -12,6 +12,7 @@ Please see the README for the hardware before reading this file
 - [Storage](#storage)
 - [Command Protocol](#command-protocol)
   - [Available commands:](#available-commands)
+- [Building Options](#building-options)
 
 
 # Introduction
@@ -33,6 +34,7 @@ To build you will need to install the following packages into your Arduino Libra
 ***Adafruit_MCP23XXX*** to operate the MCP23017 i2c controlled I/O expander on the board  
 ***Adafruit_SHT31*** for SHT3x temperature/humidity sensor  
 ***Adafruit_AHTX0*** for the cheap AHT10 temperature/humidity sensor
+***Adafruit_BME280*** for the BME280 temperature/humidity/pressure sensor
 ***SparkFun_I2C_Mux_Arduino_Library*** for the PCA9548A i2c multiplexer
 ***PIDController*** for the PWM dew heater PID control
 ***[MemoryFree](https://github.com/mpflaga/Arduino-MemoryFree)*** only for debug purposes ( used it to make sure I was not fragmenting the memory )
@@ -46,13 +48,15 @@ I originaly wanted this code to be generic and customizable for any board layout
     //  m: multiplexed switchable port
     //  p: pwm port
     //  a: Allways-On port
+    //  f: Temp/Humidity probe
+    //  g: Temp/Humidity/pressure probe
     //  t: temperature probe
     //  h: humidity probe
     // always-on ports always last followed by t then h
     const String boardSignature = "mmmmmmmmppppaath";
 
 # Hardware expansion
-The board is expandable through the exposed i2c interface via the RJ12 connector. Currently are supported SHT31, AHT10 and the PCA9548A i2c multiplexer, allowing you to build complex temperature probe setups. The setups allow you to either have a simple Temperature / Humidity sensor to turn on the configured PWM ports when the temperature dips below the dewpoint or have a more complex setup with dedicated temperature feedback for each PWM port (adjusting each port output to maintain a configurable temperature offset above the dewpoint).  
+The board is expandable through the exposed i2c interface via the RJ12 connector. Currently are supported BME280, SHT31, AHT10 and the PCA9548A i2c multiplexer, allowing you to build complex temperature probe setups. The setups allow you to either have a simple Temperature / Humidity sensor to turn on the configured PWM ports when the temperature dips below the dewpoint or have a more complex setup with dedicated temperature feedback for each PWM port (adjusting each port output to maintain a configurable temperature offset above the dewpoint).  
 The RJ12 port has the following pinout  
 
     pin 1: NC
@@ -63,7 +67,7 @@ The RJ12 port has the following pinout
     pin 6: NC
 
 # Temperature probes
-The board will detect i2c temperature probes at boot. The first probe found will always be the global environment probe, each additional probe found will be assigned to the PWM ports in ascending order for PID control.
+The board will detect i2c temperature probes at boot. The first probe found will always be the global environment probe, each additional probe found will be assigned to the PWM ports in ascending order for PID control. the order of preference for primary probe is BME280, SHT31, AHT10
 
 # Storage
 The EEPROM on the Atmel328 is 1024 bytes and it's cells are limited to 100k writes.  
@@ -115,3 +119,10 @@ example commands:
 |`G:<dd>`|get PWM port mode|`G:<dd>:<mode>`|get `<mode>` of the port `<dd>`|
 |`T:<dd>:<temp>`|set a positive temperature offset for the dew control fir each PWM port|`TOK`|set `<temp>` offset for port `<dd>`|
 |`H:<dd>`|get the temperature offset for a port|`H:<dd>:<temp>`|get `<temp>` offset of the port `<dd>`|
+
+# Building Options
+to build and flash the firmware you will need the following:
+a pogo pin programmer for the initial bootflash, see the instructions in the PCB folders
+For the firmware use the same option as for an Arduino Nano:
+- Board: Arduino AVR Boards / Arduino Nano
+- Processor: ATMega328P

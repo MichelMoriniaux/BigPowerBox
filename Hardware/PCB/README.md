@@ -54,7 +54,7 @@ I have provided in this repo:
 - placement file for assembly
 
 Once the board delivered, you will need to flash a bootloader onto it. There are a lot of guides on the web as how to do this but it essentially boils down to: in the Arduino IDE, configure the board as an "Arduino Nano", processor as "ATMega 328P" and Programmer as "Arduino as ISP", connect the ISCP cable from your burner and click "Burn Bootloader"  
-You can build a quick and dirty burner from an arduino nano board, a piece of wire, a knife and some pogo pins.  
+You can build a quick and dirty burner from an arduino nano board, a 2cm piece of wire, a knife and some pogo pins.  
 
 # PCB image and Finished product
 ![PCB](../../Resources/PCBImg.jpg)

@@ -36,6 +36,7 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.cmdOK = new System.Windows.Forms.Button();
             this.cmdCancel = new System.Windows.Forms.Button();
+            this.cmdConnect = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.picASCOM = new System.Windows.Forms.PictureBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -73,6 +74,16 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
             this.cmdCancel.Text = "Cancel";
             this.cmdCancel.UseVisualStyleBackColor = true;
             this.cmdCancel.Click += new System.EventHandler(this.CmdCancel_Click);
+            // 
+            // cmdOK
+            // 
+            this.cmdConnect.Location = new System.Drawing.Point(177, 42);
+            this.cmdConnect.Name = "cmdConnect";
+            this.cmdConnect.Size = new System.Drawing.Size(90, 24);
+            this.cmdConnect.TabIndex = 10;
+            this.cmdConnect.Text = "Get Names";
+            this.cmdConnect.UseVisualStyleBackColor = true;
+            this.cmdConnect.Click += new System.EventHandler(this.CmdConnect_Click);
             // 
             // label1
             // 
@@ -175,8 +186,7 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
             this.checkBox1.Name = "checkBox1";
             this.checkBox1.Size = new System.Drawing.Size(325, 30);
             this.checkBox1.TabIndex = 9;
-            this.checkBox1.Text = "Modify Port Names ( connect first and come back to this dialog\r\n                 " +
-    "               to retrieve the names saved on the switch )";
+            this.checkBox1.Text = "Modify Port Names ( press 'Get Names' first to populate the list )";
             this.toolTip1.SetToolTip(this.checkBox1, "Check this to modify the port names.");
             this.checkBox1.UseVisualStyleBackColor = true;
             this.checkBox1.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
@@ -189,6 +199,7 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
             this.Controls.Add(this.checkBox1);
             this.Controls.Add(this.dataGridViewSwitches);
             this.Controls.Add(this.comboBoxComPort);
+            this.Controls.Add(this.cmdConnect);
             this.Controls.Add(this.chkTrace);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.picASCOM);
@@ -326,6 +337,7 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
 
         private System.Windows.Forms.Button cmdOK;
         private System.Windows.Forms.Button cmdCancel;
+        private System.Windows.Forms.Button cmdConnect;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.PictureBox picASCOM;
         private System.Windows.Forms.Label label2;

@@ -121,6 +121,33 @@ namespace ASCOM.ShortCircuitBigPowerSwitch.Switch
             tl.Enabled = chkTrace.Checked;
         }
 
+        private void CmdConnect_Click(object sender, EventArgs e) // OK button event handler
+        {
+            // Place any validation constraint checks here and update the state variables with results from the dialogue
+
+            tl.Enabled = chkTrace.Checked;
+
+            try
+            {
+                if (!SwitchHardware.Connected)
+                    SwitchHardware.comPort = (string)comboBoxComPort.SelectedItem;
+                // connect to the device
+                SwitchHardware.Connected = true;
+                // clear the port name table
+                dataGridViewSwitches.Rows.Clear();
+                for (short i = 0; i < SwitchHardware.portNum; i++)
+                {
+                    dataGridViewSwitches.Rows.Add(i, SwitchHardware.GetSwitchName(i));
+                }
+                SwitchHardware.Connected = false;
+            }
+            catch
+            {
+                // Ignore any errors here in case the PC does not have any COM ports that can be selected
+            }
+            tl.Enabled = chkTrace.Checked;
+        }
+
         private void CmdCancel_Click(object sender, EventArgs e) // Cancel button event handler
         {
             Close();
